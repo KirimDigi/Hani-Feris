@@ -1760,62 +1760,15 @@ fbq('track', 'PageView');
 <script>
 let ytMusicPlaying = false;
 let isYT = false;
-const discMusics = document.querySelectorAll(".elementor-icon-wrapper[id*=mute-sound] .elementor-icon i");
-const topSectionEl = document.querySelectorAll(".elementor-top-section");
-document.addEventListener('DOMContentLoaded', ()=>{
-    document.querySelector('.elementor-background-video-container video').removeAttribute('autoplay');
-})
-disableScroll();
-function hideAllSect(){
-    if ( document.body.classList.contains('elementor-editor-active') ) return;
-    for (const elSect of topSectionEl) {
-      if (elSect.matches("#cover")) {
-        continue;
-      }
-      elSect.style.display = "none";
-    }
-}
-function showAllSect(){
-    for (const elSect of topSectionEl) {
-      if (elSect.matches("#cover")) {
-        continue;
-      }
-      elSect.style.display = "";
-    }
-}
-hideAllSect();
 
-var btnBuka = document.getElementById("tombolbuka");
-if (btnBuka) {
-    btnBuka.onclick = function(){
-        enableScroll();
-        _playAudio();
-        jQuery("#cover").animate({ opacity: 0, top: "-100%"}, 1500);
-        showAllSect();
-        jQuery("#cover").hide(1500, function(){
-            var bgVideo = document.querySelector('.elementor-background-video-container video');
-            if (bgVideo && typeof bgVideo.play === 'function') {
-                bgVideo.play().catch(function(){});
-            }
-        });
-    };
-}
-discMusics.forEach((disc) => {
-    disc.onclick=function(){
-        _pauseAudio();
-    };
-})
-
-addEventListener('beforeunload', () => {
-    window.scrollTo(0,0)
-});
 function disableScroll() {
     document.body.classList.add("stop-scrolling");
 }
-  
+
 function enableScroll() {
     document.body.classList.remove("stop-scrolling");
 }
+
 function _playAudio(){
     var song = document.getElementById("song");
     if (song) {
@@ -1828,34 +1781,91 @@ function _playAudio(){
         if (p !== undefined) {
             p.then(function() {
                 ytMusicPlaying = true;
-                discMusics.forEach((disc) => { disc.classList.add('audioRotate'); });
+                var discMusics = document.querySelectorAll(".elementor-icon-wrapper[id*=mute-sound] .elementor-icon i");
+                discMusics.forEach(function(disc) { disc.classList.add('audioRotate'); });
             }).catch(function(e) { console.log("Audio play deferred:", e); });
         }
     } else {
         ytMusicPlaying = true;
-        discMusics.forEach((disc) => { disc.classList.add('audioRotate'); });
+        var discMusics = document.querySelectorAll(".elementor-icon-wrapper[id*=mute-sound] .elementor-icon i");
+        discMusics.forEach(function(disc) { disc.classList.add('audioRotate'); });
     }
 }
+
 function _pauseAudio(){
-    if(ytMusicPlaying) {
-        if(document.body.contains(document.getElementById("song"))) {
-        document.getElementById("song").pause();
-        isYT = false;
-      } else {
-        isYT = true;
-            jQuery("iframe").each(function() {
-                if(this.id==='youtube-player') jQuery(this)[0].contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-            });
-      }
-      ytMusicPlaying = false;
-        discMusics.forEach((disc) => {
-            disc.classList.remove('audioRotate');
-        })
-    } else {
-        _playAudio();
+    var song = document.getElementById("song");
+    if (song) {
+        song.pause();
     }
-}    }
+    ytMusicPlaying = false;
+    var discMusics = document.querySelectorAll(".elementor-icon-wrapper[id*=mute-sound] .elementor-icon i");
+    discMusics.forEach(function(disc) { disc.classList.remove('audioRotate'); });
 }
+
+function openInvitation() {
+    enableScroll();
+    _playAudio();
+    var cover = document.getElementById("cover");
+    if (cover) {
+        if (typeof jQuery !== 'undefined') {
+            jQuery(cover).animate({ opacity: 0, top: "-100%" }, 1200, function() {
+                cover.style.display = "none";
+            });
+        } else {
+            cover.style.transition = "opacity 1s ease, top 1s ease";
+            cover.style.opacity = "0";
+            cover.style.top = "-100%";
+            setTimeout(function() { cover.style.display = "none"; }, 1000);
+        }
+    }
+    var bgVideo = document.querySelector('.elementor-background-video-container video');
+    if (bgVideo && typeof bgVideo.play === 'function') {
+        bgVideo.play().catch(function(){});
+    }
+}
+
+disableScroll();
+
+document.addEventListener('DOMContentLoaded', function() {
+    var videoEl = document.querySelector('.elementor-background-video-container video');
+    if (videoEl) videoEl.removeAttribute('autoplay');
+
+    var btnBuka = document.getElementById("tombolbuka");
+    if (btnBuka) {
+        btnBuka.style.cursor = "pointer";
+        btnBuka.onclick = function(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            openInvitation();
+            return false;
+        };
+    }
+    
+    var discMusics = document.querySelectorAll(".elementor-icon-wrapper[id*=mute-sound]");
+    discMusics.forEach(function(disc) {
+        disc.onclick = function(){
+            if (ytMusicPlaying) {
+                _pauseAudio();
+            } else {
+                _playAudio();
+            }
+        };
+    });
+});
+
+document.addEventListener('click', function(e) {
+    var target = e.target;
+    while (target && target !== document.body) {
+        if (target.id === 'tombolbuka' || (target.classList && target.classList.contains('elementor-button') && target.textContent && target.textContent.indexOf('Buka Undangan') !== -1)) {
+            openInvitation();
+            break;
+        }
+        target = target.parentElement;
+    }
+});
+
+addEventListener('beforeunload', function() {
+    window.scrollTo(0,0);
+});
 </script>				</div>
 				</div>
 				<div class="elementor-element elementor-element-118d0830 elementor-widget elementor-widget-spacer" data-id="118d0830" data-element_type="widget" data-e-type="widget" data-widget_type="spacer.default">
