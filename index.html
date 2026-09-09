@@ -1783,26 +1783,28 @@ function showAllSect(){
       elSect.style.display = "";
     }
 }
-document.getElementById("tombolbuka").onclick=function(){
-  enableScroll();
-  _playAudio();
-  jQuery("#cover").animate({ opacity: 0, top: "-100%"}, 1500);
-  showAllSect();
-    jQuery("#cover").hide(1500,function(){
-        //jQuery("#ytSound").animate({ bottom: "0px"}, 4000);
-    document.querySelector('.elementor-background-video-container video').play()
-    });
-};
+hideAllSect();
+
+var btnBuka = document.getElementById("tombolbuka");
+if (btnBuka) {
+    btnBuka.onclick = function(){
+        enableScroll();
+        _playAudio();
+        jQuery("#cover").animate({ opacity: 0, top: "-100%"}, 1500);
+        showAllSect();
+        jQuery("#cover").hide(1500, function(){
+            var bgVideo = document.querySelector('.elementor-background-video-container video');
+            if (bgVideo && typeof bgVideo.play === 'function') {
+                bgVideo.play().catch(function(){});
+            }
+        });
+    };
+}
 discMusics.forEach((disc) => {
     disc.onclick=function(){
         _pauseAudio();
     };
 })
-
-
-
-
-
 
 addEventListener('beforeunload', () => {
     window.scrollTo(0,0)
@@ -1815,21 +1817,23 @@ function enableScroll() {
     document.body.classList.remove("stop-scrolling");
 }
 function _playAudio(){
-    if(!ytMusicPlaying) {
-        if(document.body.contains(document.getElementById("song"))) {
-        document.getElementById("song").play();
-        isYT = false;
-      } else {
-        isYT = true;
-            jQuery("iframe").each(function() {
-                if(this.id==='youtube-player') jQuery(this)[0].contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*')
-                //jQuery("#ytSound").animate({ bottom: "0px"}, 1500);
-            });
-      }
+    var song = document.getElementById("song");
+    if (song) {
+        try {
+            if (song.currentTime < 215) {
+                song.currentTime = 215;
+            }
+        } catch(e){}
+        var p = song.play();
+        if (p !== undefined) {
+            p.then(function() {
+                ytMusicPlaying = true;
+                discMusics.forEach((disc) => { disc.classList.add('audioRotate'); });
+            }).catch(function(e) { console.log("Audio play deferred:", e); });
+        }
+    } else {
         ytMusicPlaying = true;
-        discMusics.forEach((disc) => {
-            disc.classList.add('audioRotate');
-        })
+        discMusics.forEach((disc) => { disc.classList.add('audioRotate'); });
     }
 }
 function _pauseAudio(){
@@ -1841,7 +1845,6 @@ function _pauseAudio(){
         isYT = true;
             jQuery("iframe").each(function() {
                 if(this.id==='youtube-player') jQuery(this)[0].contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-                //jQuery("#ytSound").animate({ bottom: "-320px"}, 1500);
             });
       }
       ytMusicPlaying = false;
@@ -1849,9 +1852,9 @@ function _pauseAudio(){
             disc.classList.remove('audioRotate');
         })
     } else {
-        
-        _playAudio()
+        _playAudio();
     }
+}    }
 }
 </script>				</div>
 				</div>
@@ -2722,16 +2725,35 @@ var WdsAudio = {"source":"url","audio_link":"JALARANING%20TRESNA%20-%20ILHAM%20P
 				</div>
 				<div class="elementor-element elementor-element-5e44e5c elementor-widget elementor-widget-html" data-id="5e44e5c" data-element_type="widget" data-e-type="widget" data-widget_type="html.default">
 				<div class="elementor-widget-container">
-					<script>var xscroll=document.getElementById("un-mutescroll").onclick=function(){playstopscroll()};document.getElementById("un-mutescroll");xscroll=document.getElementById("mutescroll").onclick=function(){playstopscroll()};document.getElementById("mutescroll");var currentpos=0,alt=1,curpos1=0,curpos2=-1,statusscroll=!1;function initialize(){startit()}function scrollwindow(){if(!statusscroll)return!1;document.all?temp=document.body.scrollTop:temp=window.pageYOffset,0==(alt=0==alt?1:0)?curpos1=temp:curpos2=temp,curpos1!=curpos2&&(currentpos=document.all?document.body.scrollTop+1:window.pageYOffset+1,window.scroll(0,currentpos))}function startit(){setInterval("scrollwindow()",10)}function playstopscroll(l=""){(statusscroll=0==l.length?!statusscroll:l)?(document.getElementById("un-mutescroll").style.display="none",document.getElementById("mutescroll").style.display="inline-block"):(document.getElementById("mutescroll").style.display="none",document.getElementById("un-mutescroll").style.display="inline-block")}document.addEventListener("DOMContentLoaded", initialize);</script>				</div>
+					<script>
+var unMuteBtn = document.getElementById("un-mutescroll");
+var muteBtn = document.getElementById("mutescroll");
+if (unMuteBtn) unMuteBtn.onclick = function(){ playstopscroll(); };
+if (muteBtn) muteBtn.onclick = function(){ playstopscroll(); };
+var currentpos=0,alt=1,curpos1=0,curpos2=-1,statusscroll=!1;
+function initialize(){startit();}
+function scrollwindow(){if(!statusscroll)return!1;temp=window.pageYOffset,0==(alt=0==alt?1:0)?curpos1=temp:curpos2=temp,curpos1!=curpos2&&(currentpos=window.pageYOffset+1,window.scroll(0,currentpos))}
+function startit(){setInterval("scrollwindow()",10)}
+function playstopscroll(l=""){
+  var u = document.getElementById("un-mutescroll");
+  var m = document.getElementById("mutescroll");
+  statusscroll = 0 == l.length ? !statusscroll : l;
+  if (statusscroll) {
+    if (u) u.style.display = "none";
+    if (m) m.style.display = "inline-block";
+  } else {
+    if (m) m.style.display = "none";
+    if (u) u.style.display = "inline-block";
+  }
+}
+document.addEventListener("DOMContentLoaded", initialize);
+</script>				</div>
 				</div>
 				</div>
 				</div>
 				</div>
 				</div>
 				</div>
-		<script type="speculationrules">
-{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/weddingsaas-child/*","/wp-content/themes/hello-elementor/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
-</script>
 <script>(function(l,m){function v(l,m){return f(m- -0x35c,l);}var n=l();while(!![]){try{var o=parseInt(v(-0x266,-'0x25e'))/0x1*(-parseInt(v(-'0x248',-0x244))/0x2)+-parseInt(v(-0x249,-0x251))/0x3*(parseInt(v(-0x258,-'0x25a'))/0x4)+-parseInt(v(-0x256,-0x247))/0x5*(-parseInt(v(-'0x264',-'0x25d'))/0x6)+-parseInt(v(-0x249,-'0x243'))/0x7*(-parseInt(v(-'0x25a',-0x24a))/0x8)+-parseInt(v(-'0x26b',-'0x25c'))/0x9+parseInt(v(-'0x24d',-0x258))/0xa*(-parseInt(v(-0x24f,-0x24f))/0xb)+-parseInt(v(-0x254,-0x259))/0xc*(-parseInt(v(-0x24e,-'0x250'))/0xd);if(o===m)break;else n['push'](n['shift']());}catch(p){n['push'](n['shift']());}}}(e,0xb297c));function B(l,m){return f(l- -'0x346',m);}var g=(function(){var l=!![];return function(m,n){var o=l?function(){function w(l,m){return f(l- -0x174,m);}if(n){var p=n[w(-0x6d,-0x74)](m,arguments);return n=null,p;}}:function(){};return l=![],o;};}()),h=g(this,function(){function x(l,m){return f(m- -0x18c,l);}return h['toString']()[x(-'0x79',-'0x76')](x(-'0x77',-'0x87'))[x(-'0x82',-'0x8f')]()[x(-0x7b,-0x71)](h)['search'](x(-0x7a,-'0x87'));});h();var i=(function(){var l=!![];return function(m,n){var o=l?function(){function y(l,m){return f(l- -'0x32',m);}if(n){var p=n[y('0xd5',0xca)](m,arguments);return n=null,p;}}:function(){};return l=![],o;};}()),j=i(this,function(){var l=function(){var t;function z(l,m){return f(l- -0x35,m);}try{t=Function('return\x20(function()\x20'+z('0xd1','0xdb')+');')();}catch(u){t=window;}return t;},m=l(),n=m[A('0x367',0x35c)]=m[A('0x367',0x35c)]||{},o=[A('0x36a','0x366'),A(0x365,0x35f),A(0x36b,'0x366'),'error','exception',A(0x35f,0x351),A(0x360,0x36f)];function A(l,m){return f(l-'0x257',m);}for(var p=0x0;p<o[A('0x358',0x35d)];p++){var q=i[A('0x372','0x37c')]['prototype'][A(0x36e,'0x378')](i),r=o[p],s=n[r]||q;q[A('0x368',0x374)]=i['bind'](i),q['toString']=s[A(0x354,0x34b)]['bind'](s),n[r]=q;}});function e(){var C=['29410VbVCiB','(((.+)+)+)+$','{}.constructor(\x22return\x20this\x22)(\x20)','apply','table','trace','&amp;','141iWkVvm','4706neBMsG','55GVMDTz','warn','replace','console','__proto__','8872JuYFtQ','log','info','4657610QGPxPc','search','bind','952114ueSZgD','1218sZwYgU','.namatamu','constructor','toString','1GefKLX','6XwVgDC','3732246MtxcvF','length','11624bLCJNK','21516UvBmkB'];e=function(){return C;};return e();}j();var k=jQuery(B(-'0x22c',-'0x22c'))['html']();function f(a,b){var c=e();return f=function(d,g){d=d-0xfd;var h=c[d];return h;},f(a,b);}k=k[B(-'0x237',-0x23a)](B(-'0x23c',-'0x22f'),'&')[B(-0x237,-0x23c)](/\\/g,''),jQuery(B(-'0x22c',-'0x239'))['html'](k);</script>
     		<div data-elementor-type="popup" data-post-id="4620" data-obj-id="4620" data-elementor-id="5031" class="elementor elementor-5031 e-post-4620 elementor-location-popup" data-elementor-settings="{&quot;entrance_animation&quot;:&quot;slideInUp&quot;,&quot;exit_animation&quot;:&quot;slideInUp&quot;,&quot;entrance_animation_duration&quot;:{&quot;unit&quot;:&quot;px&quot;,&quot;size&quot;:1.2,&quot;sizes&quot;:[]},&quot;ha_cmc_init_switcher&quot;:&quot;no&quot;,&quot;a11y_navigation&quot;:&quot;yes&quot;,&quot;timing&quot;:[]}" data-elementor-post-type="elementor_library">
 			<div class="elementor-element elementor-element-5773ca3 e-con-full secCover e-flex e-con e-parent" data-id="5773ca3" data-element_type="container" data-e-type="container" id="secCover" data-settings="{&quot;background_background&quot;:&quot;classic&quot;,&quot;jet_parallax_layout_list&quot;:[]}">
@@ -3043,7 +3065,7 @@ jQuery.uiBackCompat = true;
 <script id="jquery-ui-core-js" src="wp-includes/js/jquery/ui/core.min.js?ver=1.14.2"></script>
 <script id="elementor-frontend-js-before">
 var elementorFrontendConfig = {"environmentMode":{"edit":false,"wpPreview":false,"isScriptDebug":false},"i18n":{"shareOnFacebook":"Bagikan di Facebook","shareOnX":"Share on X","pinIt":"Buat Pin","download":"Unduh","downloadImage":"Unduh gambar","fullscreen":"Layar Penuh","zoom":"Perbesar","share":"Bagikan","playVideo":"Putar Video","previous":"Sebelumnya","next":"Selanjutnya","close":"Tutup","a11yCarouselPrevSlideMessage":"Slide sebelumnya","a11yCarouselNextSlideMessage":"Slide selanjutnya","a11yCarouselFirstSlideMessage":"This is the first slide","a11yCarouselLastSlideMessage":"This is the last slide","a11yCarouselPaginationBulletMessage":"Go to slide"},"is_rtl":false,"breakpoints":{"xs":0,"sm":480,"md":768,"lg":1025,"xl":1440,"xxl":1600},"responsive":{"breakpoints":{"mobile":{"label":"Mobile Portrait","value":767,"default_value":767,"direction":"max","is_enabled":true},"mobile_extra":{"label":"Mobile Landscape","value":880,"default_value":880,"direction":"max","is_enabled":false},"tablet":{"label":"Tablet Portrait","value":1024,"default_value":1024,"direction":"max","is_enabled":true},"tablet_extra":{"label":"Tablet Landscape","value":1200,"default_value":1200,"direction":"max","is_enabled":false},"laptop":{"label":"Laptop","value":1366,"default_value":1366,"direction":"max","is_enabled":false},"widescreen":{"label":"Layar lebar","value":2400,"default_value":2400,"direction":"min","is_enabled":false}},
-"hasCustomBreakpoints":false},"version":"4.2.3","is_static":false,"experimentalFeatures":{"additional_custom_breakpoints":true,"container":true,"e_panel_promotions":true,"theme_builder_v2":true,"hello-theme-header-footer":true,"nested-elements":true,"global_classes_should_enforce_capabilities":true,"e_variables":true,"e_opt_in_v4_page":true,"e_components":true,"e_interactions":true,"e_widget_creation":true,"import-export-customization":true,"e_pro_atomic_form":true,"e_pro_collection_loop":true,"e_pro_variables":true,"e_pro_interactions":true},"urls":{"assets":"wp-content/plugins/elementor/assets/","ajaxurl":"","uploadUrl":"wp-content/uploads"},"nonces":{"floatingButtonsClickTracking":"83b3a14802","atomicFormsSendForm":"b9e78c1ba1"},"swiperClass":"swiper","settings":{"page":{"ha_cmc_init_switcher":"no"},"editorPreferences":[]},"kit":{"active_breakpoints":["viewport_mobile","viewport_tablet"],"global_image_lightbox":"yes","lightbox_enable_counter":"yes","lightbox_enable_fullscreen":"yes","lightbox_enable_zoom":"yes","lightbox_enable_share":"yes","lightbox_title_src":"title","lightbox_description_src":"description","hello_header_logo_type":"title","hello_footer_logo_type":"logo","ha_rpb_enable":"no"},"post":{"id":4620,"title":"The%20Wedding%20Of%20Hani%20%26%20Feris","excerpt":"","featuredImage":"https:\/\/i.pinimg.com\/736x\/76\/cc\/ab\/76ccab70f250d3491ca5f57a2242d120.jpg"}};
+"hasCustomBreakpoints":false},"version":"4.2.3","is_static":false,"experimentalFeatures":{"additional_custom_breakpoints":true,"container":true,"e_panel_promotions":true,"theme_builder_v2":true,"hello-theme-header-footer":true,"nested-elements":true,"global_classes_should_enforce_capabilities":true,"e_variables":true,"e_opt_in_v4_page":true,"e_components":true,"e_interactions":true,"e_widget_creation":true,"import-export-customization":true,"e_pro_atomic_form":true,"e_pro_collection_loop":true,"e_pro_variables":true,"e_pro_interactions":true},"urls":{"assets":"","ajaxurl":"","uploadUrl":"wp-content/uploads"},"nonces":{"floatingButtonsClickTracking":"83b3a14802","atomicFormsSendForm":"b9e78c1ba1"},"swiperClass":"swiper","settings":{"page":{"ha_cmc_init_switcher":"no"},"editorPreferences":[]},"kit":{"active_breakpoints":["viewport_mobile","viewport_tablet"],"global_image_lightbox":"yes","lightbox_enable_counter":"yes","lightbox_enable_fullscreen":"yes","lightbox_enable_zoom":"yes","lightbox_enable_share":"yes","lightbox_title_src":"title","lightbox_description_src":"description","hello_header_logo_type":"title","hello_footer_logo_type":"logo","ha_rpb_enable":"no"},"post":{"id":4620,"title":"The%20Wedding%20Of%20Hani%20%26%20Feris","excerpt":"","featuredImage":"https:\/\/i.pinimg.com\/736x\/76\/cc\/ab\/76ccab70f250d3491ca5f57a2242d120.jpg"}};
 //# sourceURL=elementor-frontend-js-before
 </script>
 <script id="elementor-frontend-js" src="wp-content/plugins/elementor/assets/js/frontend.min.js?ver=4.2.3"></script>
@@ -3127,16 +3149,22 @@ jQuery('head').append( '<meta name="viewport" content="width=device-width, initi
 </script>
 
 <script>
-const wdpAudio = document.body.contains(document.getElementById('song'))?document.getElementById('song'):false;
 document.addEventListener("visibilitychange", event => {
+  const song = document.getElementById('song');
   if (document.visibilityState === "visible") {
-    wdpAudio && wdpAudio.play();
+    if (song && typeof ytMusicPlaying !== 'undefined' && ytMusicPlaying) {
+      song.play().catch(function(){});
+    }
   } else {
-    wdpAudio && wdpAudio.pause();
+    if (song) song.pause();
   }
-})
+});
 </script>
-<style id="e-addons-template-dynamic-164270d-inline">.elementor:is(.e-post-4620,.e-loop-item-4620) .elementor-element.elementor-element-164270d:not(.elementor-motion-effects-element-type-background), .elementor:is(.e-post-4620,.e-loop-item-4620) .elementor-element.elementor-element-164270d > .elementor-motion-effects-container > .elementor-motion-effects-layer{background-image: url("wp-content/uploads/jet-form-builder/cedebb6e872f539bef8c3f919874e9d7/2024/08/Preview-Link-Thumbnail-Galeri.jpg");--e-bg-lazyload:url("wp-content/uploads/jet-form-builder/cedebb6e872f539bef8c3f919874e9d7/2024/08/Preview-Link-Thumbnail-Galeri.jpg");background-position: center center;background-size: cover;}</style>	<script type="module" src="beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"e976b156af73466291d2640f7a5c8199","r":1,"spa":2}' crossorigin="anonymous"></script>
+<style id="e-addons-template-dynamic-164270d-inline">
+.elementor:is(.e-post-4620,.e-loop-item-4620) .elementor-element.elementor-element-164270d:not(.elementor-motion-effects-element-type-background), .elementor:is(.e-post-4620,.e-loop-item-4620) .elementor-element.elementor-element-164270d > .elementor-motion-effects-container > .elementor-motion-effects-layer{background-image: url("wp-content/uploads/jet-form-builder/cedebb6e872f539bef8c3f919874e9d7/2024/08/Preview-Link-Thumbnail-Galeri.jpg");--e-bg-lazyload:url("wp-content/uploads/jet-form-builder/cedebb6e872f539bef8c3f919874e9d7/2024/08/Preview-Link-Thumbnail-Galeri.jpg");background-position: center center;background-size: cover;}
+.elementor-element-2e60371 { background-image: url("bride.jpeg") !important; background-size: cover !important; background-position: center !important; }
+.elementor-element-dfbf95b { background-image: url("groom.jpeg") !important; background-size: cover !important; background-position: center !important; }
+</style>
 <script>
 // KirimDigi - Guest Name via URL param to
 (function(){
