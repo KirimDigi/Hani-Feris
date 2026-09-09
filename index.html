@@ -2517,14 +2517,14 @@ but ours is my favorite.</p>				</div>
 
 	<div class="saic-wrap-link">
 
-		<a href="index-1.htm?post_id=4620&#038;comments=39&#038;get=500&#038;order=DESC" id="saic-link-4620" class="saic-link saic-icon-link saic-icon-link-true auto-load-true">
+		<a href="javascript:void(0)" id="saic-link-4620" class="saic-link saic-icon-link saic-icon-link-true auto-load-true">
 			<i class="saico-comment"></i>
-			<span>39</span>
+			<span id="rsvp-count-header">1</span>
 			Ucapan		</a>
 
 	</div>
 
-	<div id="saic-wrap-comment-4620" class="saic-wrap-comments" style="display: none;" data-id="4620">
+	<div id="saic-wrap-comment-4620" class="saic-wrap-comments" style="display: block;" data-id="4620">
 
 		<div id="saic-wrap-form-4620" class="saic-wrap-form saic-clearfix">
 
@@ -3233,16 +3233,32 @@ document.addEventListener("visibilitychange", event => {
 
 <script>
 (function() {
-  // URL Web App Google Apps Script (Ganti dengan URL Web App Anda setelah deploy)
   var GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxb9_WzDncAGQsqpaAbZiA4i8r1vvmGYDQP19hO7yYjKUx9Es-FbbPr6TI5uZJ-RPS9/exec";
 
   var attendanceSelect = document.getElementById("attendance");
   var guestWrap = document.querySelector(".saic-wrap-guest");
   var rsvpForm = document.getElementById("commentform-4620");
+  var submitBtn = document.getElementById("submit-4620");
   var toggleBtn = document.getElementById("btn-toggle-wishes");
   var wishesWrapper = document.getElementById("custom-wishes-wrapper");
   var wishesLoading = document.getElementById("custom-wishes-loading");
   var wishesList = document.getElementById("custom-wishes-list");
+  var saicLink = document.getElementById("saic-link-4620");
+  var countHeaderSpan = document.getElementById("rsvp-count-header") || (saicLink ? saicLink.querySelector("span") : null);
+
+  var cachedWishes = [];
+
+  // Prevent saicLink from navigating or reloading
+  if (saicLink) {
+    saicLink.addEventListener("click", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var wrapComment = document.getElementById("saic-wrap-comment-4620");
+      if (wrapComment) {
+        wrapComment.style.display = wrapComment.style.display === "none" ? "block" : "block";
+      }
+    }, true);
+  }
 
   // Show / Hide Jumlah Tamu berdasarkan Konfirmasi Kehadiran
   if (attendanceSelect && guestWrap) {
@@ -3269,144 +3285,175 @@ document.addEventListener("visibilitychange", event => {
     });
   }
 
-  // Load Ucapan dari Google Sheet
+  // Real-time Fetch & Update Ucapan
   function loadWishes() {
-    if (!GAS_WEB_APP_URL) {
-      wishesList.innerHTML = '<div style="text-align:center; padding:15px; color:#888; font-size:12px; background:#fff; border-radius:6px; border:1px dashed #ccc;">Silakan masukkan URL Web App Google Apps Script yang sudah di-deploy ke dalam variabel <code>GAS_WEB_APP_URL</code> di <code>index.html</code>.</div>';
-      return;
-    }
-    wishesLoading.style.display = "block";
-    wishesList.innerHTML = "";
+    if (!GAS_WEB_APP_URL) return;
+    if (wishesLoading) wishesLoading.style.display = "block";
 
     fetch(GAS_WEB_APP_URL)
       .then(function(res) { return res.json(); })
       .then(function(result) {
-        wishesLoading.style.display = "none";
-        if (result.status === "success" && result.data && result.data.length > 0) {
-          var html = "";
-          result.data.forEach(function(item) {
-            var nama = item.nama || item["nama tamu"] || "Tamu";
-            var ucapan = item.ucapan || "";
-            var me = item.kehadiran || item["konfirmasi kehadiran"] || "";
-            var jml = item.jumlah || item["jumlah tamu"] || "";
-            var time = item.timestamp ? new Date(item.timestamp).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }) : "";
-
-            var statusBadge = "";
-            if (me === "Hadir" || me === "present") {
-              statusBadge = '<span style="background:#e8f5e9; color:#2e7d32; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600;">Hadir (' + (jml || 1) + ')</span>';
-            } else if (me === "Tidak Hadir" || me === "notpresent") {
-              statusBadge = '<span style="background:#ffebee; color:#c62828; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600;">Tidak Hadir</span>';
-            } else if (me === "Masih Ragu" || me === "notsure") {
-              statusBadge = '<span style="background:#fffde7; color:#f57f17; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600;">Masih Ragu</span>';
-            } else if (me) {
-              statusBadge = '<span style="background:#f5f5f5; color:#666; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600;">' + escapeHtml(me) + '</span>';
-            }
-
-            html += '<div style="background: #ffffff; border: 1px solid #eee; border-radius: 8px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">';
-            html += '  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">';
-            html += '    <strong style="color: #603e2c; font-size: 14px;">' + escapeHtml(nama) + '</strong>';
-            html += '    ' + statusBadge;
-            html += '  </div>';
-            if (ucapan) {
-              html += '  <p style="margin: 0 0 6px 0; color: #444; font-size: 13px; line-height: 1.4; word-break: break-word;">' + escapeHtml(ucapan) + '</p>';
-            }
-            if (time) {
-              html += '  <small style="color: #999; font-size: 10px;">' + time + '</small>';
-            }
-            html += '</div>';
-          });
-          wishesList.innerHTML = html;
-        } else {
-          wishesList.innerHTML = '<div style="text-align:center; padding:15px; color:#888; font-size:13px; background:#fff; border-radius:6px; border:1px dashed #ccc;">Belum ada ucapan. Jadilah yang pertama memberikan ucapan!</div>';
+        if (wishesLoading) wishesLoading.style.display = "none";
+        if (result.status === "success" && Array.isArray(result.data)) {
+          cachedWishes = result.data;
+          renderWishes(cachedWishes);
+          if (countHeaderSpan) {
+            countHeaderSpan.textContent = cachedWishes.length || 1;
+          }
         }
       })
       .catch(function(err) {
-        wishesLoading.style.display = "none";
-        wishesList.innerHTML = '<div style="text-align:center; padding:15px; color:#c62828; font-size:12px; background:#fff; border-radius:6px; border:1px solid #ffcdd2;">Gagal memuat ucapan. Harap pastikan Web App Google Apps Script telah di-deploy dengan akses "Anyone" (Siapa saja).</div>';
+        if (wishesLoading) wishesLoading.style.display = "none";
       });
   }
 
-  // Handle Form Submit
-  if (rsvpForm) {
-    rsvpForm.addEventListener("submit", function(e) {
-      e.preventDefault();
-      var submitBtn = document.getElementById("submit-4620");
-      var namaVal = document.getElementById("author") ? document.getElementById("author").value.trim() : "";
-      var attendanceVal = attendanceSelect ? attendanceSelect.value : "";
-      var guestVal = document.getElementById("guest") ? document.getElementById("guest").value : "";
-      var ucapanVal = document.getElementById("saic-textarea-4620") ? document.getElementById("saic-textarea-4620").value.trim() : "";
+  function renderWishes(data) {
+    if (!wishesList) return;
+    if (!data || data.length === 0) {
+      wishesList.innerHTML = '<div style="text-align:center; padding:15px; color:#888; font-size:13px; background:#fff; border-radius:6px; border:1px dashed #ccc;">Belum ada ucapan. Jadilah yang pertama memberikan ucapan!</div>';
+      return;
+    }
 
-      if (!namaVal) {
-        alert("Silakan masukkan nama Anda.");
-        return;
-      }
-      if (!attendanceVal) {
-        alert("Silakan pilih konfirmasi kehadiran.");
-        return;
-      }
-      if (!ucapanVal || ucapanVal.length < 2) {
-        alert("Silakan tulis ucapan minimal 2 karakter.");
-        return;
-      }
+    var html = "";
+    data.forEach(function(item) {
+      var nama = item.nama || item["nama tamu"] || "Tamu";
+      var ucapan = item.ucapan || "";
+      var me = item.kehadiran || item["konfirmasi kehadiran"] || "";
+      var jml = item.jumlah || item["jumlah tamu"] || "";
+      var time = item.timestamp ? new Date(item.timestamp).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }) : "";
 
-      var attendanceText = "Hadir";
-      if (attendanceVal === "notpresent") attendanceText = "Tidak Hadir";
-      if (attendanceVal === "notsure") attendanceText = "Masih Ragu";
-
-      var payload = {
-        "timestamp": new Date().toISOString(),
-        "nama tamu": namaVal,
-        "ucapan": ucapanVal,
-        "konfirmasi kehadiran": attendanceText,
-        "jumlah tamu": guestVal ? (guestVal + " orang") : (attendanceVal === "present" ? "1 orang" : "-")
-      };
-
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.value = "Mengirim...";
+      var statusBadge = "";
+      if (me === "Hadir" || me === "present") {
+        statusBadge = '<span style="background:#e8f5e9; color:#2e7d32; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600;">Hadir (' + (jml || '1 orang') + ')</span>';
+      } else if (me === "Tidak Hadir" || me === "notpresent") {
+        statusBadge = '<span style="background:#ffebee; color:#c62828; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600;">Tidak Hadir</span>';
+      } else if (me === "Masih Ragu" || me === "notsure") {
+        statusBadge = '<span style="background:#fffde7; color:#f57f17; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600;">Masih Ragu</span>';
+      } else if (me) {
+        statusBadge = '<span style="background:#f5f5f5; color:#666; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600;">' + escapeHtml(me) + '</span>';
       }
 
-      if (!GAS_WEB_APP_URL) {
-        alert("Harap masukkan URL Web App Google Apps Script pada variabel GAS_WEB_APP_URL di index.html untuk menyimpan ke Google Spreadsheet.");
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.value = "Kirim";
-        }
-        return;
+      html += '<div style="background: #ffffff; border: 1px solid #eee; border-radius: 8px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">';
+      html += '  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">';
+      html += '    <strong style="color: #603e2c; font-size: 14px;">' + escapeHtml(nama) + '</strong>';
+      html += '    ' + statusBadge;
+      html += '  </div>';
+      if (ucapan) {
+        html += '  <p style="margin: 0 0 6px 0; color: #444; font-size: 13px; line-height: 1.4; word-break: break-word;">' + escapeHtml(ucapan) + '</p>';
       }
-
-      fetch(GAS_WEB_APP_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      })
-      .then(function() {
-        alert("Terima kasih! Ucapan & Konfirmasi Kehadiran Anda berhasil dikirim.");
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.value = "Kirim";
-        }
-        rsvpForm.reset();
-        if (guestWrap) guestWrap.style.display = "none";
-        // Buka list ucapan & muat ulang
-        if (wishesWrapper) {
-          wishesWrapper.style.display = "block";
-          if (toggleBtn) toggleBtn.textContent = "Sembunyikan ucapan";
-          setTimeout(loadWishes, 1000);
-        }
-      })
-      .catch(function(err) {
-        alert("Terima kasih! Ucapan Anda telah dikirim.");
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.value = "Kirim";
-        }
-        rsvpForm.reset();
-        if (guestWrap) guestWrap.style.display = "none";
-      });
+      if (time) {
+        html += '  <small style="color: #999; font-size: 10px;">' + time + '</small>';
+      }
+      html += '</div>';
     });
+    wishesList.innerHTML = html;
   }
+
+  // Fast Submit Handler - ZERO LAG, NO RELOAD
+  function handleRsvpSubmit(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    }
+
+    var namaVal = document.getElementById("author") ? document.getElementById("author").value.trim() : "";
+    var attendanceVal = attendanceSelect ? attendanceSelect.value : "";
+    var guestVal = document.getElementById("guest") ? document.getElementById("guest").value : "";
+    var ucapanVal = document.getElementById("saic-textarea-4620") ? document.getElementById("saic-textarea-4620").value.trim() : "";
+
+    if (!namaVal) {
+      alert("Silakan masukkan nama Anda.");
+      return false;
+    }
+    if (!attendanceVal) {
+      alert("Silakan pilih konfirmasi kehadiran.");
+      return false;
+    }
+    if (!ucapanVal || ucapanVal.length < 2) {
+      alert("Silakan tulis ucapan minimal 2 karakter.");
+      return false;
+    }
+
+    var attendanceText = "Hadir";
+    if (attendanceVal === "notpresent") attendanceText = "Tidak Hadir";
+    if (attendanceVal === "notsure") attendanceText = "Masih Ragu";
+
+    var jmlText = guestVal ? (guestVal + " orang") : (attendanceVal === "present" ? "1 orang" : "-");
+
+    var payload = {
+      "timestamp": new Date().toISOString(),
+      "nama tamu": namaVal,
+      "ucapan": ucapanVal,
+      "konfirmasi kehadiran": attendanceText,
+      "jumlah tamu": jmlText
+    };
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.value = "Mengirim...";
+    }
+
+    // Add optimistic local wish immediately for smooth instant feedback
+    cachedWishes.unshift({
+      timestamp: new Date().toISOString(),
+      nama: namaVal,
+      ucapan: ucapanVal,
+      kehadiran: attendanceText,
+      jumlah: jmlText
+    });
+    renderWishes(cachedWishes);
+    if (countHeaderSpan) {
+      countHeaderSpan.textContent = cachedWishes.length;
+    }
+
+    // Open wishes list automatically
+    if (wishesWrapper) {
+      wishesWrapper.style.display = "block";
+      if (toggleBtn) toggleBtn.textContent = "Sembunyikan ucapan";
+    }
+
+    // Asynchronous send to Apps Script
+    fetch(GAS_WEB_APP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(function() {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.value = "Kirim";
+      }
+      if (rsvpForm) rsvpForm.reset();
+      if (guestWrap) guestWrap.style.display = "none";
+      alert("Terima kasih! Ucapan & Konfirmasi Kehadiran Anda telah berhasil dikirim.");
+      setTimeout(loadWishes, 1500);
+    }).catch(function() {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.value = "Kirim";
+      }
+      if (rsvpForm) rsvpForm.reset();
+      if (guestWrap) guestWrap.style.display = "none";
+      alert("Terima kasih! Ucapan Anda telah dikirim.");
+    });
+
+    return false;
+  }
+
+  // Intercept form submit and click in capture phase
+  if (rsvpForm) {
+    rsvpForm.addEventListener("submit", handleRsvpSubmit, true);
+  }
+  if (submitBtn) {
+    submitBtn.addEventListener("click", handleRsvpSubmit, true);
+  }
+
+  // Initial load on page ready
+  document.addEventListener("DOMContentLoaded", function() {
+    loadWishes();
+  });
+  loadWishes();
 
   function escapeHtml(str) {
     return String(str)
