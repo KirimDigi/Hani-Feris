@@ -1675,7 +1675,7 @@ fbq('track', 'PageView');
 				</div>
 				<div class="elementor-element elementor-element-1ce9240a namatamu elementor-widget elementor-widget-heading" data-id="1ce9240a" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
 				<div class="elementor-widget-container">
-					<h2 class="elementor-heading-title elementor-size-default">Nama Tamu</h2>				</div>
+					<h2 class="elementor-heading-title elementor-size-default" id="namaTamuCover">Nama Tamu</h2>				</div>
 				</div>
 				<div class="elementor-element elementor-element-4b00fb7d elementor-widget elementor-widget-heading" data-id="4b00fb7d" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
 				<div class="elementor-widget-container">
@@ -2009,7 +2009,7 @@ function _pauseAudio(){
 					<div class="e-con-inner">
 				<div class="elementor-element elementor-element-c47e149 elementor-invisible elementor-widget elementor-widget-heading" data-id="c47e149" data-element_type="widget" data-e-type="widget" data-settings="{&quot;_animation&quot;:&quot;fadeInUp&quot;,&quot;_animation_delay&quot;:300,&quot;_animation_mobile&quot;:&quot;fadeInDown&quot;}" data-widget_type="heading.default">
 				<div class="elementor-widget-container">
-					<p class="elementor-heading-title elementor-size-default">Putra Bungsu dari</p>				</div>
+					<p class="elementor-heading-title elementor-size-default">Putra Kedua dari</p>				</div>
 				</div>
 				<div class="elementor-element elementor-element-290afa7 elementor-invisible elementor-widget elementor-widget-heading" data-id="290afa7" data-element_type="widget" data-e-type="widget" data-settings="{&quot;_animation&quot;:&quot;fadeInUp&quot;,&quot;_animation_delay&quot;:300,&quot;_animation_mobile&quot;:&quot;fadeInDown&quot;}" data-widget_type="heading.default">
 				<div class="elementor-widget-container">
@@ -2576,6 +2576,19 @@ but ours is my favorite.</p>				</div>
 							</p>
 						</div>
 
+						<div class="saic-wrap-toggle-wishes" style="margin-top: 15px;">
+							<button type="button" id="btn-toggle-wishes" style="background-color: #603e2c; color: #ffffff; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; width: 100%; font-size: 14px; transition: background-color 0.3s ease, transform 0.1s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+								Tampilkan ucapan
+							</button>
+						</div>
+
+						<div id="custom-wishes-wrapper" style="display: none; margin-top: 20px; text-align: left;">
+							<div id="custom-wishes-loading" style="text-align: center; color: #603e2c; font-size: 13px; padding: 15px; display: none;">
+								<i>Memuat ucapan...</i>
+							</div>
+							<div id="custom-wishes-list" style="max-height: 400px; overflow-y: auto; padding-right: 5px;"></div>
+						</div>
+
 					</form>
 
 				</div>
@@ -2792,7 +2805,7 @@ Bpk/ibu/Saudara/i</h2>				</div>
 				</div>
 				<div class="elementor-element elementor-element-e74060e elementor-widget elementor-widget-heading" data-id="e74060e" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
 				<div class="elementor-widget-container">
-					<h2 class="elementor-heading-title elementor-size-default">Nama Tamu</h2>				</div>
+					<h2 class="elementor-heading-title elementor-size-default" id="namaTamuMain">Nama Tamu</h2>				</div>
 				</div>
 				<div class="elementor-element elementor-element-193c38c elementor-widget elementor-widget-heading" data-id="193c38c" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
 				<div class="elementor-widget-container">
@@ -3011,7 +3024,7 @@ function downloadURI(uri, name) {
 <link rel='stylesheet' id='e-popup-css' href='wp-content/plugins/elementor-pro/assets/css/conditionals/popup.min.css?ver=4.2.1' media='all'>
 <script id="saic_library-js" src="wp-content/plugins/weddingsaas-pro/assets/plugins/custom/commentpress/saic_lib.js?ver=2.10.3"></script>
 <script id="wds_rsvp-js-extra">
-var WDS_RSVP = {"ajaxurl":"https://invitimo.my.id/wp-admin/admin-ajax.php","nonce":"ab473599d6","jPagesNum":"10","textCounterNum":"300","thanksComment":"Terima kasih atas ucapan Anda!","duplicateComment":"Anda mungkin membiarkan salah satu kolom kosong, atau menggandakan komentar.","guestMax":"5","textNavNext":"Next","textNavPrev":"Previous"};
+var WDS_RSVP = {"ajaxurl":"https://invitimo.my.id/wp-admin/admin-ajax.php","nonce":"ab473599d6","jPagesNum":"10","textCounterNum":"300","thanksComment":"Terima kasih atas ucapan Anda!","duplicateComment":"","guestMax":"5","textNavNext":"Next","textNavPrev":"Previous"};
 //# sourceURL=wds_rsvp-js-extra
 </script>
 <script id="wds_rsvp-js" src="wp-content/plugins/weddingsaas-pro/assets/js/wds-rsvp.js?ver=2.10.3"></script>
@@ -3127,44 +3140,282 @@ document.addEventListener("visibilitychange", event => {
 <script>
 // KirimDigi - Guest Name via URL param to
 (function(){
-  function getGuestName(){
-    var hash = window.location.hash || "";
-    var search = window.location.search || "";
-    var val = "";
-    if(hash.indexOf("to=") !== -1){
-      val = hash.split("to=")[1] || "";
-      val = val.split("&")[0];
-    } else if(search.indexOf("to=") !== -1){
-      var params = new URLSearchParams(search);
-      val = params.get("to") || "";
-    } else if(hash.indexOf("?to=") !== -1){
-      val = hash.split("?to=")[1] || "";
-      val = val.split("&")[0];
+  function getGuestName() {
+    var href = window.location.href || "";
+    var name = "";
+
+    var m = href.match(/(?:[?&#]to=|[?&#]nama=|[?&#]guest=)([^#\r\n]+)/i);
+    if (m && m[1]) {
+      var val = m[1];
+      var ampMatch = val.match(/&[a-zA-Z0-9_]+=/);
+      if (ampMatch) {
+        val = val.substring(0, ampMatch.index);
+      }
+      name = val;
     }
-    if(val){
-      try { val = decodeURIComponent(val.replace(/\+/g, " ")); } catch(e){ val = val.replace(/\+/g, " "); }
-      try { val = decodeURIComponent(val); } catch(e){}
-      return val.trim();
+
+    if (!name && window.location.search) {
+      try {
+        var p = new URLSearchParams(window.location.search);
+        name = p.get("to") || p.get("nama") || p.get("guest") || "";
+      } catch(e) {}
+    }
+
+    if (name) {
+      try {
+        name = decodeURIComponent(name.replace(/\+/g, " "));
+      } catch(e) {
+        name = name.replace(/\+/g, " ");
+      }
+      try {
+        if (name.indexOf("%") !== -1) {
+          name = decodeURIComponent(name);
+        }
+      } catch(e) {}
+      return name.trim();
     }
     return "";
   }
-  function updateGuestName(){
-    var name = getGuestName();
-    if(!name) return;
-    var els = document.querySelectorAll("h2");
-    for(var i=0;i<els.length;i++){
-      var el = els[i];
-      if(el.textContent.trim() === "Nama Tamu"){
-        el.textContent = name;
+
+  function applyGuestName() {
+    var guestName = getGuestName();
+    if (!guestName) return;
+
+    var coverEl = document.getElementById("namaTamuCover");
+    if (coverEl) coverEl.textContent = guestName;
+
+    var mainEl = document.getElementById("namaTamuMain");
+    if (mainEl) mainEl.textContent = guestName;
+
+    var targets = document.querySelectorAll(".namatamu, .namatamu .elementor-heading-title, [data-id='16bd682a'] .elementor-heading-title, [data-id='1ce9240a'] .elementor-heading-title, [data-id='e74060e'] .elementor-heading-title");
+    for (var i = 0; i < targets.length; i++) {
+      var t = targets[i];
+      if (t.children.length === 0 || t.classList.contains("elementor-heading-title")) {
+        if (t.textContent !== guestName) {
+          t.textContent = guestName;
+        }
       }
     }
-    var namatamuEls = document.querySelectorAll(".namatamu .elementor-heading-title");
-    for(var j=0;j<namatamuEls.length;j++){
-      namatamuEls[j].textContent = name;
+
+    var all = document.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, div, b, strong");
+    for (var j = 0; j < all.length; j++) {
+      var el = all[j];
+      if (el.children.length === 0 && el.textContent.trim() === "Nama Tamu") {
+        el.textContent = guestName;
+      }
+    }
+
+    var inputs = document.querySelectorAll("#author, input[name='author'], input[name='nama_tamu'], input[name='nama']");
+    for (var k = 0; k < inputs.length; k++) {
+      var inp = inputs[k];
+      if (!inp.value || inp.value === "Nama Tamu") {
+        inp.value = guestName;
+      }
     }
   }
-  document.addEventListener("DOMContentLoaded", updateGuestName);
-  window.addEventListener("hashchange", updateGuestName);
+
+  applyGuestName();
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyGuestName);
+  }
+  window.addEventListener("load", applyGuestName);
+  window.addEventListener("hashchange", applyGuestName);
+
+  var count = 0;
+  var interval = setInterval(function() {
+    applyGuestName();
+    count++;
+    if (count > 50) clearInterval(interval);
+  }, 200);
+})();
+</script>
+
+<script>
+(function() {
+  // URL Web App Google Apps Script (Ganti dengan URL Web App Anda setelah deploy)
+  var GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxb9_WzDncAGQsqpaAbZiA4i8r1vvmGYDQP19hO7yYjKUx9Es-FbbPr6TI5uZJ-RPS9/exec";
+
+  var attendanceSelect = document.getElementById("attendance");
+  var guestWrap = document.querySelector(".saic-wrap-guest");
+  var rsvpForm = document.getElementById("commentform-4620");
+  var toggleBtn = document.getElementById("btn-toggle-wishes");
+  var wishesWrapper = document.getElementById("custom-wishes-wrapper");
+  var wishesLoading = document.getElementById("custom-wishes-loading");
+  var wishesList = document.getElementById("custom-wishes-list");
+
+  // Show / Hide Jumlah Tamu berdasarkan Konfirmasi Kehadiran
+  if (attendanceSelect && guestWrap) {
+    attendanceSelect.addEventListener("change", function() {
+      if (this.value === "present" || this.value === "notsure") {
+        guestWrap.style.display = "block";
+      } else {
+        guestWrap.style.display = "none";
+      }
+    });
+  }
+
+  // Toggle Tampilkan / Sembunyikan Ucapan
+  if (toggleBtn && wishesWrapper) {
+    toggleBtn.addEventListener("click", function() {
+      if (wishesWrapper.style.display === "none" || !wishesWrapper.style.display) {
+        wishesWrapper.style.display = "block";
+        toggleBtn.textContent = "Sembunyikan ucapan";
+        loadWishes();
+      } else {
+        wishesWrapper.style.display = "none";
+        toggleBtn.textContent = "Tampilkan ucapan";
+      }
+    });
+  }
+
+  // Load Ucapan dari Google Sheet
+  function loadWishes() {
+    if (!GAS_WEB_APP_URL) {
+      wishesList.innerHTML = '<div style="text-align:center; padding:15px; color:#888; font-size:12px; background:#fff; border-radius:6px; border:1px dashed #ccc;">Silakan masukkan URL Web App Google Apps Script yang sudah di-deploy ke dalam variabel <code>GAS_WEB_APP_URL</code> di <code>index.html</code>.</div>';
+      return;
+    }
+    wishesLoading.style.display = "block";
+    wishesList.innerHTML = "";
+
+    fetch(GAS_WEB_APP_URL)
+      .then(function(res) { return res.json(); })
+      .then(function(result) {
+        wishesLoading.style.display = "none";
+        if (result.status === "success" && result.data && result.data.length > 0) {
+          var html = "";
+          result.data.forEach(function(item) {
+            var nama = item.nama || item["nama tamu"] || "Tamu";
+            var ucapan = item.ucapan || "";
+            var me = item.kehadiran || item["konfirmasi kehadiran"] || "";
+            var jml = item.jumlah || item["jumlah tamu"] || "";
+            var time = item.timestamp ? new Date(item.timestamp).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }) : "";
+
+            var statusBadge = "";
+            if (me === "Hadir" || me === "present") {
+              statusBadge = '<span style="background:#e8f5e9; color:#2e7d32; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600;">Hadir (' + (jml || 1) + ')</span>';
+            } else if (me === "Tidak Hadir" || me === "notpresent") {
+              statusBadge = '<span style="background:#ffebee; color:#c62828; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600;">Tidak Hadir</span>';
+            } else if (me === "Masih Ragu" || me === "notsure") {
+              statusBadge = '<span style="background:#fffde7; color:#f57f17; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600;">Masih Ragu</span>';
+            } else if (me) {
+              statusBadge = '<span style="background:#f5f5f5; color:#666; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600;">' + escapeHtml(me) + '</span>';
+            }
+
+            html += '<div style="background: #ffffff; border: 1px solid #eee; border-radius: 8px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">';
+            html += '  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">';
+            html += '    <strong style="color: #603e2c; font-size: 14px;">' + escapeHtml(nama) + '</strong>';
+            html += '    ' + statusBadge;
+            html += '  </div>';
+            if (ucapan) {
+              html += '  <p style="margin: 0 0 6px 0; color: #444; font-size: 13px; line-height: 1.4; word-break: break-word;">' + escapeHtml(ucapan) + '</p>';
+            }
+            if (time) {
+              html += '  <small style="color: #999; font-size: 10px;">' + time + '</small>';
+            }
+            html += '</div>';
+          });
+          wishesList.innerHTML = html;
+        } else {
+          wishesList.innerHTML = '<div style="text-align:center; padding:15px; color:#888; font-size:13px; background:#fff; border-radius:6px; border:1px dashed #ccc;">Belum ada ucapan. Jadilah yang pertama memberikan ucapan!</div>';
+        }
+      })
+      .catch(function(err) {
+        wishesLoading.style.display = "none";
+        wishesList.innerHTML = '<div style="text-align:center; padding:15px; color:#c62828; font-size:12px; background:#fff; border-radius:6px; border:1px solid #ffcdd2;">Gagal memuat ucapan. Harap pastikan Web App Google Apps Script telah di-deploy dengan akses "Anyone" (Siapa saja).</div>';
+      });
+  }
+
+  // Handle Form Submit
+  if (rsvpForm) {
+    rsvpForm.addEventListener("submit", function(e) {
+      e.preventDefault();
+      var submitBtn = document.getElementById("submit-4620");
+      var namaVal = document.getElementById("author") ? document.getElementById("author").value.trim() : "";
+      var attendanceVal = attendanceSelect ? attendanceSelect.value : "";
+      var guestVal = document.getElementById("guest") ? document.getElementById("guest").value : "";
+      var ucapanVal = document.getElementById("saic-textarea-4620") ? document.getElementById("saic-textarea-4620").value.trim() : "";
+
+      if (!namaVal) {
+        alert("Silakan masukkan nama Anda.");
+        return;
+      }
+      if (!attendanceVal) {
+        alert("Silakan pilih konfirmasi kehadiran.");
+        return;
+      }
+      if (!ucapanVal || ucapanVal.length < 2) {
+        alert("Silakan tulis ucapan minimal 2 karakter.");
+        return;
+      }
+
+      var attendanceText = "Hadir";
+      if (attendanceVal === "notpresent") attendanceText = "Tidak Hadir";
+      if (attendanceVal === "notsure") attendanceText = "Masih Ragu";
+
+      var payload = {
+        "timestamp": new Date().toISOString(),
+        "nama tamu": namaVal,
+        "ucapan": ucapanVal,
+        "konfirmasi kehadiran": attendanceText,
+        "jumlah tamu": guestVal ? (guestVal + " orang") : (attendanceVal === "present" ? "1 orang" : "-")
+      };
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.value = "Mengirim...";
+      }
+
+      if (!GAS_WEB_APP_URL) {
+        alert("Harap masukkan URL Web App Google Apps Script pada variabel GAS_WEB_APP_URL di index.html untuk menyimpan ke Google Spreadsheet.");
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.value = "Kirim";
+        }
+        return;
+      }
+
+      fetch(GAS_WEB_APP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      .then(function() {
+        alert("Terima kasih! Ucapan & Konfirmasi Kehadiran Anda berhasil dikirim.");
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.value = "Kirim";
+        }
+        rsvpForm.reset();
+        if (guestWrap) guestWrap.style.display = "none";
+        // Buka list ucapan & muat ulang
+        if (wishesWrapper) {
+          wishesWrapper.style.display = "block";
+          if (toggleBtn) toggleBtn.textContent = "Sembunyikan ucapan";
+          setTimeout(loadWishes, 1000);
+        }
+      })
+      .catch(function(err) {
+        alert("Terima kasih! Ucapan Anda telah dikirim.");
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.value = "Kirim";
+        }
+        rsvpForm.reset();
+        if (guestWrap) guestWrap.style.display = "none";
+      });
+    });
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 })();
 </script>
 </body>
