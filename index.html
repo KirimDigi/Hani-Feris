@@ -1,6 +1,55 @@
 <!DOCTYPE html>
 <html lang="id" prefix="og: https://ogp.me/ns#">
 <head>
+<script>
+// Prevent 120-second timeouts & retries for non-existent dynamic bundle chunks and CSS in Elementor
+(function(){
+    var origAppendChild = document.head.appendChild;
+    var origInsertBefore = document.head.insertBefore;
+    
+    function isMissingAsset(url) {
+        if (!url) return false;
+        return url.indexOf('.bundle.min.js') !== -1 || 
+               url.indexOf('/css/conditionals/') !== -1 || 
+               url.indexOf('/lib/dialog/') !== -1 || 
+               url.indexOf('/lib/swiper/v8/css/') !== -1;
+    }
+
+    document.head.appendChild = function(element) {
+        if (element) {
+            var src = element.src || element.href || '';
+            if (isMissingAsset(src)) {
+                if (element.tagName === 'SCRIPT') {
+                    setTimeout(function(){
+                        if (typeof element.onerror === 'function') element.onerror(new Event('error'));
+                        if (typeof element.onload === 'function') element.onload(new Event('load'));
+                        if (element.parentNode) element.parentNode.removeChild(element);
+                    }, 0);
+                }
+                return element;
+            }
+        }
+        return origAppendChild.apply(this, arguments);
+    };
+
+    document.head.insertBefore = function(element, referenceNode) {
+        if (element) {
+            var src = element.src || element.href || '';
+            if (isMissingAsset(src)) {
+                if (element.tagName === 'SCRIPT') {
+                    setTimeout(function(){
+                        if (typeof element.onerror === 'function') element.onerror(new Event('error'));
+                        if (typeof element.onload === 'function') element.onload(new Event('load'));
+                        if (element.parentNode) element.parentNode.removeChild(element);
+                    }, 0);
+                }
+                return element;
+            }
+        }
+        return origInsertBefore.apply(this, arguments);
+    };
+})();
+</script>
 	<meta charset="UTF-8">
 		<link rel="icon" type="image/x-icon" href="KirimDigi.ico?v=2"><link rel="apple-touch-icon" href="KirimDigi.ico?v=2">
 <link rel="shortcut icon" type="image/x-icon" href="KirimDigi.ico?v=2">
@@ -3135,7 +3184,7 @@ wp.i18n.setLocaleData( { 'text direction\u0004ltr': [ 'ltr' ] } );
 //# sourceURL=wp-i18n-js-after
 </script>
 <script id="elementor-pro-frontend-js-before">
-var ElementorProFrontendConfig = {"ajaxurl":"","nonce":"89ac3376e8","urls":{"assets":"wp-content/plugins/elementor-pro/assets/","rest":""},"settings":{"lazy_load_background_images":true},"popup":{"hasPopUps":true},"shareButtonsNetworks":{"facebook":{"title":"Facebook","has_counter":true},"twitter":{"title":"Twitter"},"linkedin":{"title":"LinkedIn","has_counter":true},"pinterest":{"title":"Pinterest","has_counter":true},"reddit":{"title":"Reddit","has_counter":true},"vk":{"title":"VK","has_counter":true},"odnoklassniki":{"title":"OK","has_counter":true},"tumblr":{"title":"Tumblr"},"digg":{"title":"Digg"},"skype":{"title":"Skype"},"stumbleupon":{"title":"StumbleUpon","has_counter":true},"mix":{"title":"Mix"},"telegram":{"title":"Telegram"},"pocket":{"title":"Pocket","has_counter":true},"xing":{"title":"XING","has_counter":true},"whatsapp":{"title":"WhatsApp"},"email":{"title":"Email"},"print":{"title":"Print"},"x-twitter":{"title":"X"},"threads":{"title":"Threads"}},
+var ElementorProFrontendConfig = {"ajaxurl":"","nonce":"89ac3376e8","urls":{"assets":"wp-content/plugins/elementor-pro/assets/","rest":""},"settings":{"lazy_load_background_images":false},"popup":{"hasPopUps":true},"shareButtonsNetworks":{"facebook":{"title":"Facebook","has_counter":true},"twitter":{"title":"Twitter"},"linkedin":{"title":"LinkedIn","has_counter":true},"pinterest":{"title":"Pinterest","has_counter":true},"reddit":{"title":"Reddit","has_counter":true},"vk":{"title":"VK","has_counter":true},"odnoklassniki":{"title":"OK","has_counter":true},"tumblr":{"title":"Tumblr"},"digg":{"title":"Digg"},"skype":{"title":"Skype"},"stumbleupon":{"title":"StumbleUpon","has_counter":true},"mix":{"title":"Mix"},"telegram":{"title":"Telegram"},"pocket":{"title":"Pocket","has_counter":true},"xing":{"title":"XING","has_counter":true},"whatsapp":{"title":"WhatsApp"},"email":{"title":"Email"},"print":{"title":"Print"},"x-twitter":{"title":"X"},"threads":{"title":"Threads"}},
 "facebook_sdk":{"lang":"id_ID","app_id":""},"lottie":{"defaultAnimationUrl":"https:\/\/hi.kekondangan.id\/wp-content\/plugins\/elementor-pro\/modules\/lottie\/assets\/animations\/default.json"}};
 //# sourceURL=elementor-pro-frontend-js-before
 </script>
