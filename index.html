@@ -2,52 +2,96 @@
 <html lang="id" prefix="og: https://ogp.me/ns#">
 <head>
 <script>
-// Prevent 120-second timeouts & retries for non-existent dynamic bundle chunks and CSS in Elementor
+// Comprehensive block for missing Elementor assets: DOM append/insert, fetch, XHR
 (function(){
-    var origAppendChild = document.head.appendChild;
-    var origInsertBefore = document.head.insertBefore;
-    
+    // --- Pattern matcher ---
     function isMissingAsset(url) {
         if (!url) return false;
-        return url.indexOf('.bundle.min.js') !== -1 || 
-               url.indexOf('/css/conditionals/') !== -1 || 
-               url.indexOf('/lib/dialog/') !== -1 || 
-               url.indexOf('/lib/swiper/v8/css/') !== -1;
+        var u = String(url);
+        return u.indexOf('.bundle.min.js') !== -1 ||
+               u.indexOf('/css/conditionals/') !== -1 ||
+               u.indexOf('/lib/dialog/') !== -1 ||
+               u.indexOf('/lib/swiper/v8/css/') !== -1 ||
+               u.indexOf('/lib/share-link/') !== -1 ||
+               u.indexOf('frontend.min.js') !== -1 ||
+               (u.indexOf('elementor') !== -1 && u.indexOf('.bundle.') !== -1);
     }
 
+    // --- Block DOM appendChild / insertBefore ---
+    var origAppendChild = document.head.appendChild.bind(document.head);
+    var origInsertBefore = document.head.insertBefore.bind(document.head);
+
     document.head.appendChild = function(element) {
-        if (element) {
-            var src = element.src || element.href || '';
-            if (isMissingAsset(src)) {
-                if (element.tagName === 'SCRIPT') {
-                    setTimeout(function(){
-                        if (typeof element.onerror === 'function') element.onerror(new Event('error'));
-                        if (typeof element.onload === 'function') element.onload(new Event('load'));
-                        if (element.parentNode) element.parentNode.removeChild(element);
-                    }, 0);
-                }
-                return element;
+        if (element && isMissingAsset(element.src || element.href || '')) {
+            if (element.tagName === 'SCRIPT') {
+                setTimeout(function(){
+                    if (typeof element.onerror === 'function') element.onerror(new Event('error'));
+                    if (typeof element.onload === 'function') element.onload(new Event('load'));
+                }, 0);
             }
+            return element;
         }
-        return origAppendChild.apply(this, arguments);
+        return origAppendChild(element);
     };
 
-    document.head.insertBefore = function(element, referenceNode) {
-        if (element) {
-            var src = element.src || element.href || '';
-            if (isMissingAsset(src)) {
-                if (element.tagName === 'SCRIPT') {
-                    setTimeout(function(){
-                        if (typeof element.onerror === 'function') element.onerror(new Event('error'));
-                        if (typeof element.onload === 'function') element.onload(new Event('load'));
-                        if (element.parentNode) element.parentNode.removeChild(element);
-                    }, 0);
-                }
-                return element;
+    document.head.insertBefore = function(element, ref) {
+        if (element && isMissingAsset(element.src || element.href || '')) {
+            if (element.tagName === 'SCRIPT') {
+                setTimeout(function(){
+                    if (typeof element.onerror === 'function') element.onerror(new Event('error'));
+                    if (typeof element.onload === 'function') element.onload(new Event('load'));
+                }, 0);
             }
+            return element;
         }
-        return origInsertBefore.apply(this, arguments);
+        return origInsertBefore(element, ref);
     };
+
+    // --- Block fetch() for missing assets ---
+    var origFetch = window.fetch;
+    window.fetch = function(input, init) {
+        var url = (typeof input === 'string') ? input : (input && input.url) ? input.url : '';
+        if (isMissingAsset(url)) {
+            // Return an empty 200 response so Elementor doesn't crash waiting
+            return Promise.resolve(new Response('', { status: 200, headers: { 'Content-Type': 'text/javascript' } }));
+        }
+        return origFetch.apply(this, arguments);
+    };
+
+    // --- Block XMLHttpRequest for missing assets ---
+    var OrigXHR = window.XMLHttpRequest;
+    function PatchedXHR() {
+        var xhr = new OrigXHR();
+        var _open = xhr.open.bind(xhr);
+        var _send = xhr.send.bind(xhr);
+        var blocked = false;
+        xhr.open = function(method, url) {
+            if (isMissingAsset(url)) {
+                blocked = true;
+                return;
+            }
+            return _open.apply(xhr, arguments);
+        };
+        xhr.send = function() {
+            if (blocked) {
+                // Fire readystatechange with status 200 to prevent hang
+                setTimeout(function(){
+                    try {
+                        Object.defineProperty(xhr, 'readyState', { get: function(){ return 4; }, configurable: true });
+                        Object.defineProperty(xhr, 'status', { get: function(){ return 200; }, configurable: true });
+                        Object.defineProperty(xhr, 'responseText', { get: function(){ return ''; }, configurable: true });
+                        if (typeof xhr.onreadystatechange === 'function') xhr.onreadystatechange();
+                        if (typeof xhr.onload === 'function') xhr.onload(new Event('load'));
+                    } catch(e) {}
+                }, 0);
+                return;
+            }
+            return _send.apply(xhr, arguments);
+        };
+        return xhr;
+    }
+    PatchedXHR.prototype = OrigXHR.prototype;
+    window.XMLHttpRequest = PatchedXHR;
 })();
 </script>
 	<meta charset="UTF-8">
