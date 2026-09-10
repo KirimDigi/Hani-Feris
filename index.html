@@ -2,63 +2,130 @@
 <html lang="id" prefix="og: https://ogp.me/ns#">
 <head>
 <script>
-// Comprehensive block for missing Elementor assets: DOM append/insert, fetch, XHR
+// === ELEMENTOR OFFLINE GUARD v3 — Patch webpack chunks + fetch + XHR + DOM ===
 (function(){
-    // --- Pattern matcher ---
-    function isMissingAsset(url) {
+
+    // ---------------------------------------------------------------
+    // 1. URL pattern: apakah ini aset Elementor yang tidak ada lokal?
+    // ---------------------------------------------------------------
+    function isElementorChunkUrl(url) {
         if (!url) return false;
         var u = String(url);
-        return u.indexOf('.bundle.min.js') !== -1 ||
-               u.indexOf('/css/conditionals/') !== -1 ||
-               u.indexOf('/lib/dialog/') !== -1 ||
-               u.indexOf('/lib/swiper/v8/css/') !== -1 ||
-               u.indexOf('/lib/share-link/') !== -1 ||
-               u.indexOf('frontend.min.js') !== -1 ||
-               (u.indexOf('elementor') !== -1 && u.indexOf('.bundle.') !== -1);
+        // webpack JS chunks: angka atau nama chunk, ex: 557.min.js, 543.min.js
+        if (/\/\d+\.min\.js(\?|$)/.test(u)) return true;
+        if (/\/(webpack|elementor)[^\/]*runtime[^\/]*\.js(\?|$)/.test(u)) return true;
+        if (u.indexOf('.bundle.min.js') !== -1) return true;
+        if (u.indexOf('frontend-modules.min.js') !== -1) return true;
+        if (u.indexOf('frontend.min.js') !== -1) return true;
+        if (u.indexOf('/css/conditionals/') !== -1) return true;
+        if (u.indexOf('/lib/dialog/') !== -1) return true;
+        if (u.indexOf('/lib/swiper/v8/css/') !== -1) return true;
+        if (u.indexOf('/lib/share-link/') !== -1) return true;
+        if (u.indexOf('elements-handlers') !== -1) return true;
+        if (u.indexOf('text-editor.default') !== -1) return true;
+        if (u.indexOf('lightbox') !== -1 && u.indexOf('elementor') !== -1) return true;
+        return false;
     }
 
-    // --- Block DOM appendChild / insertBefore ---
+    // ---------------------------------------------------------------
+    // 2. Patch document.createElement untuk intercept <script> chunks
+    // ---------------------------------------------------------------
+    var _origCreateElement = document.createElement.bind(document);
+    document.createElement = function(tag) {
+        var el = _origCreateElement.apply(document, arguments);
+        if (String(tag).toLowerCase() === 'script') {
+            var _origSetSrc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src');
+            var _blocked = false;
+            Object.defineProperty(el, 'src', {
+                set: function(val) {
+                    if (isElementorChunkUrl(val)) {
+                        _blocked = true;
+                        // Simulasi load sukses agar webpack tidak throw ChunkLoadError
+                        setTimeout(function(){
+                            try {
+                                el.dispatchEvent(new Event('load'));
+                                if (typeof el.onload === 'function') el.onload(new Event('load'));
+                            } catch(e){}
+                        }, 0);
+                        return;
+                    }
+                    if (_origSetSrc && _origSetSrc.set) _origSetSrc.set.call(el, val);
+                },
+                get: function() {
+                    if (_origSetSrc && _origSetSrc.get) return _origSetSrc.get.call(el);
+                    return '';
+                },
+                configurable: true
+            });
+        }
+        return el;
+    };
+
+    // ---------------------------------------------------------------
+    // 3. Patch document.head.appendChild & insertBefore
+    // ---------------------------------------------------------------
     var origAppendChild = document.head.appendChild.bind(document.head);
     var origInsertBefore = document.head.insertBefore.bind(document.head);
 
-    document.head.appendChild = function(element) {
-        if (element && isMissingAsset(element.src || element.href || '')) {
-            if (element.tagName === 'SCRIPT') {
-                setTimeout(function(){
-                    if (typeof element.onerror === 'function') element.onerror(new Event('error'));
+    function maybeBlockElement(element) {
+        if (!element) return false;
+        var url = (element.src || element.href || '');
+        if (!isElementorChunkUrl(url)) return false;
+        if (element.tagName === 'SCRIPT') {
+            setTimeout(function(){
+                try {
+                    element.dispatchEvent(new Event('load'));
                     if (typeof element.onload === 'function') element.onload(new Event('load'));
-                }, 0);
-            }
-            return element;
+                } catch(e){}
+            }, 0);
         }
+        return true;
+    }
+
+    document.head.appendChild = function(element) {
+        if (maybeBlockElement(element)) return element;
         return origAppendChild(element);
     };
-
     document.head.insertBefore = function(element, ref) {
-        if (element && isMissingAsset(element.src || element.href || '')) {
-            if (element.tagName === 'SCRIPT') {
-                setTimeout(function(){
-                    if (typeof element.onerror === 'function') element.onerror(new Event('error'));
-                    if (typeof element.onload === 'function') element.onload(new Event('load'));
-                }, 0);
-            }
-            return element;
-        }
+        if (maybeBlockElement(element)) return element;
         return origInsertBefore(element, ref);
     };
 
-    // --- Block fetch() for missing assets ---
+    // ---------------------------------------------------------------
+    // 4. Patch document.body.appendChild & insertBefore juga
+    // ---------------------------------------------------------------
+    var _origBodyAppend = HTMLElement.prototype.appendChild;
+    HTMLElement.prototype.appendChild = function(element) {
+        if (element && element.tagName === 'SCRIPT' && isElementorChunkUrl(element.src || '')) {
+            setTimeout(function(){
+                try {
+                    element.dispatchEvent(new Event('load'));
+                    if (typeof element.onload === 'function') element.onload(new Event('load'));
+                } catch(e){}
+            }, 0);
+            return element;
+        }
+        return _origBodyAppend.apply(this, arguments);
+    };
+
+    // ---------------------------------------------------------------
+    // 5. Patch fetch()
+    // ---------------------------------------------------------------
     var origFetch = window.fetch;
     window.fetch = function(input, init) {
         var url = (typeof input === 'string') ? input : (input && input.url) ? input.url : '';
-        if (isMissingAsset(url)) {
-            // Return an empty 200 response so Elementor doesn't crash waiting
-            return Promise.resolve(new Response('', { status: 200, headers: { 'Content-Type': 'text/javascript' } }));
+        if (isElementorChunkUrl(url)) {
+            return Promise.resolve(new Response('/* blocked */', {
+                status: 200,
+                headers: { 'Content-Type': 'text/javascript' }
+            }));
         }
         return origFetch.apply(this, arguments);
     };
 
-    // --- Block XMLHttpRequest for missing assets ---
+    // ---------------------------------------------------------------
+    // 6. Patch XMLHttpRequest
+    // ---------------------------------------------------------------
     var OrigXHR = window.XMLHttpRequest;
     function PatchedXHR() {
         var xhr = new OrigXHR();
@@ -66,19 +133,15 @@
         var _send = xhr.send.bind(xhr);
         var blocked = false;
         xhr.open = function(method, url) {
-            if (isMissingAsset(url)) {
-                blocked = true;
-                return;
-            }
+            if (isElementorChunkUrl(url)) { blocked = true; return; }
             return _open.apply(xhr, arguments);
         };
         xhr.send = function() {
             if (blocked) {
-                // Fire readystatechange with status 200 to prevent hang
                 setTimeout(function(){
                     try {
                         Object.defineProperty(xhr, 'readyState', { get: function(){ return 4; }, configurable: true });
-                        Object.defineProperty(xhr, 'status', { get: function(){ return 200; }, configurable: true });
+                        Object.defineProperty(xhr, 'status',    { get: function(){ return 200; }, configurable: true });
                         Object.defineProperty(xhr, 'responseText', { get: function(){ return ''; }, configurable: true });
                         if (typeof xhr.onreadystatechange === 'function') xhr.onreadystatechange();
                         if (typeof xhr.onload === 'function') xhr.onload(new Event('load'));
@@ -92,6 +155,64 @@
     }
     PatchedXHR.prototype = OrigXHR.prototype;
     window.XMLHttpRequest = PatchedXHR;
+
+    // ---------------------------------------------------------------
+    // 7. Patch webpack __webpack_require__.l (chunk loader) setelah load
+    //    — intercept langsung di webpack runtime agar tidak retry chunk
+    // ---------------------------------------------------------------
+    function patchWebpackChunkLoader() {
+        // Coba patch semua objek webpack runtime yang ada di window
+        var wKeys = Object.keys(window).filter(function(k){
+            return k.indexOf('webpackChunk') === 0 || k === '__webpack_require__';
+        });
+        // Patch __webpack_require__.l jika tersedia
+        if (window.__webpack_require__ && window.__webpack_require__.l) {
+            var origL = window.__webpack_require__.l;
+            window.__webpack_require__.l = function(url, done, key, chunkId) {
+                if (isElementorChunkUrl(url)) {
+                    // Langsung panggil done dengan error null agar chunk dianggap loaded
+                    setTimeout(function(){ if (typeof done === 'function') done(null); }, 0);
+                    return;
+                }
+                return origL.apply(this, arguments);
+            };
+        }
+    }
+
+    // Jalankan patch setelah script lain dimuat
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', patchWebpackChunkLoader);
+    } else {
+        patchWebpackChunkLoader();
+    }
+    // Juga coba setelah window load (webpack bisa jadi belum ready saat DOMContentLoaded)
+    window.addEventListener('load', patchWebpackChunkLoader);
+
+    // ---------------------------------------------------------------
+    // 8. Global error handler: suppress ChunkLoadError agar tidak muncul di console
+    // ---------------------------------------------------------------
+    window.addEventListener('error', function(e) {
+        if (e && e.message && (
+            e.message.indexOf('ChunkLoadError') !== -1 ||
+            e.message.indexOf('Loading chunk') !== -1 ||
+            e.message.indexOf('chunk') !== -1 && e.message.indexOf('failed') !== -1
+        )) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    }, true);
+
+    window.addEventListener('unhandledrejection', function(e) {
+        if (e && e.reason && (
+            String(e.reason).indexOf('ChunkLoadError') !== -1 ||
+            String(e.reason).indexOf('Loading chunk') !== -1
+        )) {
+            e.preventDefault();
+            return false;
+        }
+    }, true);
+
 })();
 </script>
 	<meta charset="UTF-8">
