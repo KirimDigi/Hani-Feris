@@ -1823,10 +1823,16 @@ fbq('track', 'PageView');
 .elementor-element-2dd4dff5 {
     pointer-events: auto !important;
     cursor: pointer !important;
-    z-index: 99999 !important;
+    z-index: 999999 !important;
+    position: fixed !important;
+    bottom: 85px !important;
+    right: 20px !important;
+    left: auto !important;
+    top: auto !important;
     display: flex !important;
     opacity: 1 !important;
     visibility: visible !important;
+    transform: none !important;
 }
 .elementor-element-2dd4dff5 a, .elementor-element-2dd4dff5 .elementor-icon-wrapper, .elementor-element-2dd4dff5 .elementor-icon {
     pointer-events: auto !important;
@@ -4333,8 +4339,99 @@ document.addEventListener("visibilitychange", event => {
     setInterval(bindBarcode, 2000);
 })();
 </script>
+<style id="fallback-barcode-style">
+#fallback-barcode-btn {
+    position: fixed !important;
+    bottom: 85px !important;
+    right: 20px !important;
+    left: auto !important;
+    width: 56px !important;
+    height: 56px !important;
+    background: #603e2c !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 999999 !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+    border: 2px solid #fff !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+#fallback-barcode-btn svg {
+    width: 28px !important;
+    height: 28px !important;
+    fill: #fff !important;
+}
+#fallback-barcode-btn:active {
+    transform: scale(0.95) !important;
+}
+</style>
+<script>
+// Fallback barcode button - selalu tampil jika icon asli tidak terdeteksi/clickable
+(function(){
+    function createFallback(){
+        if(document.getElementById('fallback-barcode-btn')) return;
+        var origIcon = document.querySelector('.elementor-element-2dd4dff5');
+        var isVisible = false;
+        if(origIcon){
+            var rect = origIcon.getBoundingClientRect();
+            var style = window.getComputedStyle(origIcon);
+            isVisible = style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0' && rect.width > 0 && rect.height > 0;
+        }
+        // Selalu buat fallback sebagai backup, tapi sembunyikan jika orig sudah visible dan clickable
+        // Untuk paksa, kita buat fallback selalu visible sebagai backup di atas orig
+        var btn = document.createElement('div');
+        btn.id = 'fallback-barcode-btn';
+        btn.setAttribute('role','button');
+        btn.setAttribute('aria-label','Check-in');
+        btn.title = 'Check-in';
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="#fff" d="M256 464V304c0-8.8 7.2-16 16-16h64c8.8 0 16 7.2 16 16s7.2 16 16 16h32c8.8 0 16-7.2 16-16s7.2-16 16-16s16 7.2 16 16v96c0 8.8-7.2 16-16 16H368c-8.8 0-16-7.2-16-16s-7.2-16-16-16s-16 7.2-16 16v64c0 8.8-7.2 16-16 16H272c-8.8 0-16-7.2-16-16zm128 0a16 16 0 1 1 -32 0 16 16 0 1 1 32 0zm64 0a16 16 0 1 1 -32 0 16 16 0 1 1 32 0zM48 32C21.5 32 0 53.5 0 80v96c0 26.5 21.5 48 48 48h96c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48H48zm80 64v64H64V96h64zM48 288c-26.5 0-48 21.5-48 48v96c0 26.5 21.5 48 48 48h96c26.5 0 48-21.5 48-48V336c0-26.5-21.5-48-48-48H48zm80 64v64H64V352h64zM256 80v96c0 26.5 21.5 48 48 48h96c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48H304c-26.5 0-48 21.5-48 48zm64 16h64v64H320V96z"/></svg>';
+        btn.onclick = function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            if(window.openBarcodePopup) window.openBarcodePopup();
+            else {
+                var p=document.querySelector('.elementor-5031');
+                if(p){ p.style.setProperty('display','flex','important'); document.body.style.overflow='hidden'; }
+            }
+        };
+        document.body.appendChild(btn);
+        // Jika orig icon sudah ada dan visible, sembunyikan fallback agar tidak double, tapi tetap biarkan orig yang handle
+        // Untuk paksa, kita biarkan fallback di atas orig dengan z-index lebih tinggi, jadi selalu bisa diklik
+        // Jika orig sudah di posisi fixed bottom 85px right 20px, fallback akan overlap, tapi kita set fallback di bottom 85px juga, jadi akan double
+        // Solusi: jika orig visible, hapus fallback dan biarkan orig
+        setTimeout(function(){
+            var orig = document.querySelector('.elementor-element-2dd4dff5');
+            if(orig){
+                var r = orig.getBoundingClientRect();
+                var s = window.getComputedStyle(orig);
+                var visible = s.display !== 'none' && s.visibility !== 'hidden' && r.width>0;
+                if(visible){
+                    // Orig sudah visible, hapus fallback agar tidak double di posisi yang sama
+                    // Tapi kita sudah set orig di bottom 85px, fallback juga di 85px, jadi akan double
+                    // Hapus fallback jika orig ada
+                    if(btn.parentNode) btn.parentNode.removeChild(btn);
+                    console.log('orig barcode visible, fallback removed');
+                } else {
+                    console.log('orig barcode NOT visible, fallback kept');
+                }
+            }
+        }, 1500);
+    }
+    if(document.readyState==='loading'){
+        document.addEventListener('DOMContentLoaded', function(){ setTimeout(createFallback, 300); });
+    } else {
+        setTimeout(createFallback, 300);
+    }
+    window.addEventListener('load', function(){ setTimeout(createFallback, 800); });
+})();
+</script>
 </body>
 </html>
+
+
 
 
 
