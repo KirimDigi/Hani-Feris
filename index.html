@@ -4079,7 +4079,7 @@ document.addEventListener("visibilitychange", event => {
         var it=galleryLinks[cur]; if(!it) return;
         im.src=it.href; cap.textContent=it.title||''; lb.style.display='flex'; document.body.style.overflow='hidden';
     }
-    function close(){ var lb=document.getElementById('custom-lightbox'); if(lb) lb.style.display='none'; document.body.style.overflow=''; }
+    window._customLightboxOpenAt = openAt; window.openCustomLightbox = function(href){ var idx=0; for(var i=0;i<galleryLinks.length;i++){ if(galleryLinks[i].href===href){ idx=i; break; } } openAt(idx); }; function close(){ var lb=document.getElementById('custom-lightbox'); if(lb) lb.style.display='none'; document.body.style.overflow=''; }
     function next(){ openAt(cur+1); } function prev(){ openAt(cur-1); }
     document.addEventListener('click', function(e){
         var a=e.target.closest('a[data-elementor-open-lightbox="yes"], a.e-gallery-item, .elementor-gallery__container a');
@@ -4110,8 +4110,139 @@ document.addEventListener("visibilitychange", event => {
     window.addEventListener('load', collect); setTimeout(collect,1500);
 })();
 </script>
+<script>
+// === PATCH WEBPACK LIGHTBOX & ASSETSLOADER AGAR TIDAK HANGING SPINNER ===
+(function(){
+    function patchWpRequire(wp){
+        if(!wp || wp._patchedLightbox) return;
+        wp._patchedLightbox = true;
+        try {
+            var origE = wp.e;
+            if(origE){
+                wp.e = function(chunkId){
+                    if(chunkId===786 || chunkId===216 || chunkId==='786' || chunkId==='216'){
+                        return Promise.resolve();
+                    }
+                    return origE.apply(this, arguments);
+                };
+            }
+            var origT = wp.t;
+            if(origT){
+                wp.t = function(moduleId, mode){
+                    if(moduleId===3942 || moduleId==='3942'){
+                        // Fake Lightbox class
+                        return { default: class FakeLightbox {
+                            constructor(){}
+                            createLightbox(link){
+                                // buka custom lightbox jika ada
+                                try {
+                                    var href = link && (link.href || link.getAttribute('href')) || '';
+                                    if(window.openCustomLightboxAt) window.openCustomLightboxAt(href);
+                                    else if(window.openCustomLightbox) window.openCustomLightbox(href);
+                                } catch(e){}
+                            }
+                        }};
+                    }
+                    return origT.apply(this, arguments);
+                };
+            }
+            // juga patch m untuk definisi langsung
+            if(wp.m){
+                wp.m[3942] = function(e,t,n){
+                    t.default = class FakeLightbox {
+                        createLightbox(link){
+                            try {
+                                var href = link && (link.href || link.getAttribute('href')) || '';
+                                if(window.openCustomLightboxAt) window.openCustomLightboxAt(href);
+                            } catch(err){}
+                        }
+                    };
+                };
+            }
+        } catch(err){}
+    }
+    // Intercept setter untuk __webpack_require__
+    var _wp = window.__webpack_require__;
+    if(_wp) patchWpRequire(_wp);
+    Object.defineProperty(window, '__webpack_require__', {
+        get: function(){ return _wp; },
+        set: function(val){
+            _wp = val;
+            patchWpRequire(val);
+        },
+        configurable: true
+    });
+    // Polling juga untuk jaga-jaga setelah load
+    var interval = setInterval(function(){
+        if(window.__webpack_require__){
+            patchWpRequire(window.__webpack_require__);
+        }
+        if(window.elementorFrontend && window.elementorFrontend.utils && window.elementorFrontend.utils.assetsLoader){
+            var al = window.elementorFrontend.utils.assetsLoader;
+            if(!al._patchedLightbox){
+                al._patchedLightbox = true;
+                var origLoad = al.load;
+                al.load = function(type, name){
+                    if(['dialog','share-link','swiper','e-lightbox','lightbox','swiper-css','dialog-css'].indexOf(name)!==-1){
+                        return Promise.resolve();
+                    }
+                    return origLoad.apply(this, arguments);
+                };
+            }
+            // Hapus handler Elementor yang memanggil getLightbox di init agar tidak hanging
+            try {
+                if(window.jQuery && window.elementorFrontend.elements && window.elementorFrontend.elements.$document){
+                    // unbind click handler Elementor lightbox setelah init
+                    setTimeout(function(){
+                        try {
+                            if(window.jQuery){
+                                // Lepas handler Elementor lightbox, biarkan custom yang handle
+                                window.jQuery(document).off('click', 'a[data-elementor-open-lightbox]');
+                                window.jQuery(document).off('click', 'a, [data-elementor-lightbox]');
+                            }
+                        } catch(e){}
+                    }, 2000);
+                }
+            } catch(e){}
+        }
+    }, 300);
+    setTimeout(function(){ clearInterval(interval); }, 15000);
+
+    // Expose openCustomLightboxAt untuk dipakai FakeLightbox
+    window.openCustomLightboxAt = function(href){
+        var nodes = document.querySelectorAll('a[data-elementor-open-lightbox="yes"]');
+        var links = Array.from(nodes).map(function(a){ return a.getAttribute('href'); });
+        var idx = links.indexOf(href);
+        if(idx===-1) idx=0;
+        // trigger custom lightbox yang sudah ada
+        var ev = new CustomEvent('openCustomLightbox', {detail:{index: idx, href: href}});
+        document.dispatchEvent(ev);
+        // fallback: cari elemen custom lightbox dan buka manual
+        if(window._customLightboxOpenAt) window._customLightboxOpenAt(idx);
+    };
+
+    // Hubungkan dengan lightbox custom yang sudah ada
+    document.addEventListener('openCustomLightbox', function(e){
+        if(window._customLightboxOpenAt) window._customLightboxOpenAt(e.detail.index);
+    });
+
+    // Patch window.load untuk hentikan spinner paksa
+    window.addEventListener('load', function(){
+        setTimeout(function(){
+            // Paksa hide spinner / overlay yang mungkin masih nunggu Promise
+            document.body.classList.remove('elementor-loading');
+            var loaders = document.querySelectorAll('.elementor-loading, .e-loading');
+            loaders.forEach(function(el){ el.style.display='none'; });
+            // Dispatch custom event agar Elementor anggap load selesai
+            window.dispatchEvent(new Event('elementor/frontend/init'));
+        }, 800);
+    });
+})();
+</script>
 </body>
 </html>
+
+
 
 
 
