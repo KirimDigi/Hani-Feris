@@ -3652,56 +3652,77 @@ document.addEventListener("visibilitychange", event => {
 })();
 </script>
 <script>
-// Barcode Popup Modal Click Handler
+// Barcode Popup Modal - FIXED immediate handler (dekat icon music mute/unmute)
 (function(){
-    document.addEventListener('DOMContentLoaded', function(){
-        var popup = document.querySelector('.elementor-5031');
-        if (popup) {
-            popup.style.cssText = 'display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; background:rgba(0,0,0,0.8); overflow-y:auto; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;';
-
-            var popupContent = popup.firstElementChild || popup;
-            if (popupContent) {
-                popupContent.style.cssText = 'max-width:480px; width:100%; margin:auto; background:#fff; border-radius:16px; overflow:hidden; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.5);';
-            }
-
-            // Create Close Button
-            if (!popup.querySelector('.custom-popup-close-btn')) {
-                var closeBtn = document.createElement('button');
-                closeBtn.className = 'custom-popup-close-btn';
-                closeBtn.innerHTML = '&times;';
-                closeBtn.style.cssText = 'position:fixed; top:20px; right:20px; z-index:1000000; background:#603e2c; color:#fff; border:2px solid #fff; font-size:28px; width:44px; height:44px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.4); line-height:1;';
-                closeBtn.onclick = function(e){
-                    e.preventDefault();
-                    e.stopPropagation();
-                    popup.style.display = 'none';
-                };
-                popup.appendChild(closeBtn);
-            }
-
-            popup.onclick = function(e) {
-                if (e.target === popup) {
-                    popup.style.display = 'none';
-                }
-            };
+    var popup;
+    function initPopup(){
+        popup = document.querySelector('.elementor-5031, [data-elementor-id="5031"]');
+        if(!popup) return;
+        popup.style.cssText = 'display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; background:rgba(0,0,0,0.85); overflow-y:auto; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;';
+        var content = popup.querySelector('#secCover') || popup.firstElementChild;
+        if(content){
+            content.style.cssText = 'max-width:480px; width:100%; margin:auto; background:#fff; border-radius:16px; overflow:hidden; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.5); animation: popupIn 0.3s ease;';
         }
-
-        // Global click listener for Barcode icon links
-        document.addEventListener('click', function(e){
-            var target = e.target;
-            while (target && target !== document.body) {
-                var href = target.getAttribute && target.getAttribute('href');
-                if (href && (href.indexOf('5031') !== -1 || href.indexOf('popup%3Aopen') !== -1 || (target.closest && target.closest('.elementor-element-2dd4dff5')))) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (popup) {
-                        popup.style.display = 'flex';
-                    }
-                    return false;
-                }
-                target = target.parentElement;
+        if(!popup.querySelector('.custom-popup-close-btn')){
+            var btn=document.createElement('button');
+            btn.className='custom-popup-close-btn';
+            btn.innerHTML='&times;';
+            btn.setAttribute('aria-label','Close');
+            btn.style.cssText='position:fixed; top:20px; right:20px; z-index:1000000; background:#603e2c; color:#fff; border:2px solid #fff; font-size:28px; width:44px; height:44px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.4); line-height:1;';
+            btn.onclick=function(e){ e.preventDefault(); e.stopPropagation(); popup.style.display='none'; document.body.style.overflow=''; };
+            popup.appendChild(btn);
+        }
+        popup.onclick=function(e){ if(e.target===popup){ popup.style.display='none'; document.body.style.overflow=''; } };
+        document.addEventListener('keydown', function(e){ if(e.key==='Escape' && popup.style.display!=='none'){ popup.style.display='none'; document.body.style.overflow=''; } });
+    }
+    function openPopup(){
+        if(!popup) popup=document.querySelector('.elementor-5031, [data-elementor-id="5031"]');
+        if(!popup) return;
+        try {
+            var qrEl=document.getElementById('qr_checkin_764');
+            if(qrEl && window.QRCodeStyling && qrEl.children.length===0){
+                var data = window.location.href || '';
+                var qr=new QRCodeStyling({width:150,height:150,type:"svg",data:data, image:"", qrOptions:{errorCorrectionLevel:"Q"}, dotsOptions:{color:"#000",type:"square"}, backgroundOptions:{color:"#FFF"}, imageOptions:{imageSize:0.3, crossOrigin:"anonymous", margin:2}});
+                qr.append(qrEl);
             }
-        }, true);
-    });
+        } catch(err){}
+        popup.style.display='flex';
+        document.body.style.overflow='hidden';
+        document.body.classList.remove('elementor-loading');
+    }
+    // Handler CAPTURE immediate - sebelum Elementor
+    document.addEventListener('click', function(e){
+        var t=e.target;
+        var isBarcode=false;
+        var cur=t;
+        while(cur && cur!==document){
+            if(cur.matches && cur.matches('a[href*="5031"], a[href*="popup"]')){ isBarcode=true; break; }
+            if(cur.closest && cur.closest('.elementor-element-2dd4dff5')){ isBarcode=true; break; }
+            if(cur.getAttribute && cur.getAttribute('href') && cur.getAttribute('href').indexOf('5031')!==-1){ isBarcode=true; break; }
+            cur=cur.parentElement;
+            if(!cur) break;
+        }
+        if(!isBarcode && e.target.closest){
+            var barIcon=document.querySelector('.elementor-element-2dd4dff5');
+            if(barIcon && barIcon.contains(e.target)) isBarcode=true;
+        }
+        if(isBarcode){
+            e.preventDefault();
+            e.stopPropagation();
+            if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+            openPopup();
+            return false;
+        }
+    }, true);
+    initPopup();
+    if(document.readyState==='loading'){
+        document.addEventListener('DOMContentLoaded', initPopup);
+    } else {
+        setTimeout(initPopup, 50);
+    }
+    window.addEventListener('load', initPopup);
+    window.openBarcodePopup=openPopup;
+    window.closeBarcodePopup=function(){ if(popup) popup.style.display='none'; document.body.style.overflow=''; };
 })();
 </script>
 <script>
@@ -4241,6 +4262,9 @@ document.addEventListener("visibilitychange", event => {
 </script>
 </body>
 </html>
+
+
+
 
 
 
