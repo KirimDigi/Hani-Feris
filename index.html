@@ -1819,7 +1819,25 @@ fbq('track', 'PageView');
     color: #485349;
   }
 </style>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"></head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><style id="fix-barcode-clickable">
+.elementor-element-2dd4dff5, .elementor-element-2dd4dff5 a, .elementor-element-2dd4dff5 .elementor-icon-wrapper, .elementor-element-2dd4dff5 .elementor-icon {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 99999 !important;
+    position: relative !important;
+}
+.elementor-element-2dd4dff5 {
+    z-index: 99999 !important;
+    pointer-events: auto !important;
+}
+.elementor-5031 {
+    display: none !important;
+}
+.elementor-5031[style*="display: flex"] {
+    display: flex !important;
+}
+</style>
+</head>
 <body class="wp-singular post-template-default single single-post postid-4620 single-format-standard wp-embed-responsive wp-theme-hello-elementor wp-child-theme-weddingsaas-child hello-elementor-default elementor-default elementor-template-canvas elementor-kit-6 elementor-page-4606">
 			<div data-elementor-type="single-post" data-post-id="4620" data-obj-id="4620" data-elementor-id="4606" class="elementor elementor-4606 e-post-4620 elementor-location-single post-4620 post type-post status-publish format-standard has-post-thumbnail hentry category-undangan-pernikahan template-pernikahan-motion-01" data-elementor-settings="{&quot;ha_cmc_init_switcher&quot;:&quot;no&quot;}" data-elementor-post-type="elementor_library">
 			<div class="elementor-element elementor-element-b7cef4f e-con-full e-flex e-con e-parent" data-id="b7cef4f" data-element_type="container" data-e-type="container" data-settings="{&quot;jet_parallax_layout_list&quot;:[]}">
@@ -3658,7 +3676,7 @@ document.addEventListener("visibilitychange", event => {
     function initPopup(){
         popup = document.querySelector('.elementor-5031, [data-elementor-id="5031"]');
         if(!popup) return;
-        popup.style.cssText = 'display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; background:rgba(0,0,0,0.85); overflow-y:auto; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;';
+        popup.style.cssText = 'display:none !important; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; background:rgba(0,0,0,0.85); overflow-y:auto; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;';
         var content = popup.querySelector('#secCover') || popup.firstElementChild;
         if(content){
             content.style.cssText = 'max-width:480px; width:100%; margin:auto; background:#fff; border-radius:16px; overflow:hidden; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.5); animation: popupIn 0.3s ease;';
@@ -3669,11 +3687,11 @@ document.addEventListener("visibilitychange", event => {
             btn.innerHTML='&times;';
             btn.setAttribute('aria-label','Close');
             btn.style.cssText='position:fixed; top:20px; right:20px; z-index:1000000; background:#603e2c; color:#fff; border:2px solid #fff; font-size:28px; width:44px; height:44px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.4); line-height:1;';
-            btn.onclick=function(e){ e.preventDefault(); e.stopPropagation(); popup.style.display='none'; document.body.style.overflow=''; };
+            btn.onclick=function(e){ e.preventDefault(); e.stopPropagation(); popup.style.setProperty('display','none','important'); document.body.style.overflow=''; };
             popup.appendChild(btn);
         }
-        popup.onclick=function(e){ if(e.target===popup){ popup.style.display='none'; document.body.style.overflow=''; } };
-        document.addEventListener('keydown', function(e){ if(e.key==='Escape' && popup.style.display!=='none'){ popup.style.display='none'; document.body.style.overflow=''; } });
+        popup.onclick=function(e){ if(e.target===popup){ popup.style.setProperty('display','none','important'); document.body.style.overflow=''; } };
+        document.addEventListener('keydown', function(e){ if(e.key==='Escape' && popup.style.display!=='none'){ popup.style.setProperty('display','none','important'); document.body.style.overflow=''; } });
     }
     function openPopup(){
         if(!popup) popup=document.querySelector('.elementor-5031, [data-elementor-id="5031"]');
@@ -3686,7 +3704,7 @@ document.addEventListener("visibilitychange", event => {
                 qr.append(qrEl);
             }
         } catch(err){}
-        popup.style.display='flex';
+        popup.style.setProperty('display','flex','important');
         document.body.style.overflow='hidden';
         document.body.classList.remove('elementor-loading');
     }
@@ -3722,7 +3740,7 @@ document.addEventListener("visibilitychange", event => {
     }
     window.addEventListener('load', initPopup);
     window.openBarcodePopup=openPopup;
-    window.closeBarcodePopup=function(){ if(popup) popup.style.display='none'; document.body.style.overflow=''; };
+    window.closeBarcodePopup=function(){ if(popup) popup.style.setProperty('display','none','important'); document.body.style.overflow=''; };
 })();
 </script>
 <script>
@@ -4260,8 +4278,58 @@ document.addEventListener("visibilitychange", event => {
     });
 })();
 </script>
+<script>
+// Direct barcode icon binding - pasti jalan
+(function(){
+    function bindBarcode(){
+        var icon = document.querySelector('.elementor-element-2dd4dff5 a');
+        var wrap = document.querySelector('.elementor-element-2dd4dff5');
+        var popup = document.querySelector('.elementor-5031');
+        if(icon){
+            icon.style.pointerEvents='auto';
+            icon.style.cursor='pointer';
+            icon.style.zIndex='99999';
+            // Hapus href default Elementor agar tidak trigger reload
+            icon.setAttribute('data-popup-href', icon.getAttribute('href')||'');
+            // Clone untuk hapus listener Elementor yang lama
+            var clone = icon.cloneNode(true);
+            clone.addEventListener('click', function(e){
+                e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+                if(window.openBarcodePopup) window.openBarcodePopup();
+                else {
+                    var p=document.querySelector('.elementor-5031');
+                    if(p){ p.style.setProperty('display','flex','important'); document.body.style.overflow='hidden'; }
+                }
+                return false;
+            }, true);
+            icon.parentNode.replaceChild(clone, icon);
+            console.log('barcode icon direct bound');
+        }
+        if(wrap){
+            wrap.style.pointerEvents='auto';
+            wrap.style.cursor='pointer';
+            wrap.style.zIndex='99999';
+            wrap.addEventListener('click', function(e){
+                // Hanya jika belum di-handle oleh icon
+                if(e.target.closest && e.target.closest('a')) return;
+                e.preventDefault();
+                if(window.openBarcodePopup) window.openBarcodePopup();
+            }, true);
+        }
+    }
+    if(document.readyState==='loading'){
+        document.addEventListener('DOMContentLoaded', function(){ setTimeout(bindBarcode, 500); });
+    } else {
+        setTimeout(bindBarcode, 500);
+    }
+    window.addEventListener('load', function(){ setTimeout(bindBarcode, 800); });
+    // Polling untuk jaga-jaga jika Elementor render ulang
+    setInterval(bindBarcode, 2000);
+})();
+</script>
 </body>
 </html>
+
 
 
 
