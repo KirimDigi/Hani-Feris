@@ -1820,15 +1820,24 @@ fbq('track', 'PageView');
   }
 </style>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><style id="fix-barcode-clickable">
-.elementor-element-2dd4dff5, .elementor-element-2dd4dff5 a, .elementor-element-2dd4dff5 .elementor-icon-wrapper, .elementor-element-2dd4dff5 .elementor-icon {
+.elementor-element-2dd4dff5 {
     pointer-events: auto !important;
     cursor: pointer !important;
     z-index: 99999 !important;
-    position: relative !important;
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
-.elementor-element-2dd4dff5 {
-    z-index: 99999 !important;
+.elementor-element-2dd4dff5 a, .elementor-element-2dd4dff5 .elementor-icon-wrapper, .elementor-element-2dd4dff5 .elementor-icon {
     pointer-events: auto !important;
+    cursor: pointer !important;
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    position: relative !important;
 }
 .elementor-5031 {
     display: none !important;
@@ -4329,6 +4338,7 @@ document.addEventListener("visibilitychange", event => {
 </script>
 </body>
 </html>
+
 
 
 
